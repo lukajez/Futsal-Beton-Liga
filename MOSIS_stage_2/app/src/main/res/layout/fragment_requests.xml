@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RequestFragment"
+    android:orientation="vertical"
+    android:layout_gravity="center"
+    android:background="@color/colorBackground">
+
+    <RelativeLayout
+        android:id="@+id/rel_FR_Header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:paddingStart="15dp"
+        android:paddingEnd="15dp"
+        android:background="@drawable/menu_shape">
+
+        <TextView
+            android:id="@+id/txtHintListen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="VIEW REQUESTS"
+            android:textSize="15pt"
+            android:textColor="#fff"
+            android:layout_centerInParent="true"/>
+
+        <ImageButton
+            android:id="@+id/btnAddFriendRequest"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:textSize="20sp"
+            android:background="@drawable/ic_add_friend"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rel_FR_Top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="60dp"
+        >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtConnectionRQ"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Connection"
+                android:textSize="20sp"
+                android:textColor="#fff"/>
+
+            <TextView
+                android:id="@+id/txtConnectionRQExp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Listen for friend request"
+                android:textSize="15sp"
+                android:textColor="#fff"/>
+
+        </LinearLayout>
+        <Button
+            android:id="@+id/btnListenRequst"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="LISTEN"
+            android:textSize="18sp"
+            android:textColor="#262626"
+            android:background="#fff"
+            android:layout_alignParentEnd="true"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rel_FR_Middle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_below="@+id/rel_FR_Top">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtConStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Connection"
+                android:textSize="20sp"
+                android:textColor="#fff"/>
+            <TextView
+                android:id="@+id/txtConStatusExp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Connection status"
+                android:textSize="15sp"
+                android:textColor="#fff"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtStatusRequest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:text="STATUS"
+            android:layout_centerVertical="true"
+            android:textColor="#fff"
+            android:textSize="20sp"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rel_RequestInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/rel_FR_Middle"
+        android:layout_marginTop="30dp"
+        >
+
+        <TextView
+            android:id="@+id/txtRequestInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="You have a friend request from"
+            android:textSize="20sp"
+            android:textColor="#fff"
+            android:layout_centerHorizontal="true"
+            />
+
+        <LinearLayout
+            android:id="@+id/lin_FR"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/txtRequestInfo"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="20dp"
+            android:padding="5dp"
+            android:background="#3e3e3e">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/cimgProfileRequest"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:src="@drawable/ic_profile_user"/>
+
+            <TextView
+                android:id="@+id/txtUsernameRequest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Friend username"
+                android:textSize="20sp"
+                android:textColor="#fff"
+                android:layout_marginStart="20dp"
+                android:layout_gravity="center_vertical"/>
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/rel_FR_Bottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="50dp"
+            android:layout_marginEnd="50dp"
+            android:layout_below="@+id/lin_FR">
+
+            <Button
+                android:id="@+id/btnAcceptRequest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Accept"
+                android:textSize="20sp"
+                android:background="#03fca5"
+                android:textColor="@color/colorBackground"
+                android:layout_alignParentEnd="false"
+                android:layout_alignParentStart="true"/>
+
+            <Button
+                android:id="@+id/btnDeclineRequest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Decline"
+                android:textSize="20sp"
+                android:background="@drawable/btnpoljeprazno"
+                android:textColor="@color/colorPrimaryRed"
+                android:layout_alignParentStart="false"
+                android:layout_alignParentEnd="true"/>
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+
+</LinearLayout>

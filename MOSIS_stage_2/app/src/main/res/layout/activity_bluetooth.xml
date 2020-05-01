@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".BluetoothActivity"
+    android:background="@color/colorBackground">
+
+    <RelativeLayout
+        android:id="@+id/lay_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        android:background="@drawable/menu_shape">
+        <Button
+            android:id="@+id/btn_Back_BlueT"
+            android:layout_width="16dp"
+            android:layout_height="35dp"
+            android:background="@drawable/ic_back"
+            android:layout_centerVertical="true"
+            />
+        <TextView
+            android:id="@+id/txt_Add_Friend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ADD FRIEND"
+            android:textColor="#fff"
+            android:textSize="15pt"
+            android:layout_centerInParent="true"
+            />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/lay_top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_below="@+id/lay_header"
+        >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txt_Connention"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BLUETOOTH"
+                android:textColor="#fff"
+                android:textSize="20sp"
+                android:layout_centerVertical="true"
+                />
+
+            <TextView
+                android:id="@+id/txt_ConnentionExp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Turn on BT to scan devices"
+                android:textColor="#fff"
+                android:textSize="15sp"
+                android:layout_centerVertical="true"
+                />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+            <Button
+                android:id="@+id/buttonOn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:text="TURN ON"
+                android:textSize="18sp"
+                android:textColor="#262626"
+                android:background="#fff"
+                android:layout_marginStart="12dp"/>
+
+            <Button
+                android:id="@+id/buttonOff"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:text="TURN OFF"
+                android:textSize="18sp"
+                android:textColor="#262626"
+                android:background="#fff"
+                android:layout_marginStart="12dp"/>
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/lay_middle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="30dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_below="@+id/lay_top">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txt_Scan_AB"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BLUETOOTH SCAN"
+                android:textColor="#fff"
+                android:textSize="20sp"
+                android:layout_centerVertical="true"
+                />
+
+            <TextView
+                android:id="@+id/txt_Scan_AB_Exp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Discover nearby devices"
+                android:textColor="#fff"
+                android:textSize="15sp"
+                android:layout_centerVertical="true"
+                />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_Show"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Scan"
+            android:textSize="20sp"
+            android:textColor="@color/colorAccent"
+            android:background="#fff"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/lay_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lay_middle">
+
+        <TextView
+            android:id="@+id/txt_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="STATUS"
+            android:textSize="20sp"
+            android:layout_centerHorizontal="true"/>
+
+        <ListView
+            android:id="@+id/list_paired"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/txt_status"
+            android:layout_marginTop="20dp"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="10.0sp"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rel_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_below="@+id/lay_bottom">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_centerVertical="true">
+
+            <TextView
+                android:id="@+id/txt_Request_AB"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="REQUEST"
+                android:textColor="#fff"
+                android:textSize="20sp"
+                android:layout_centerVertical="true"
+                />
+
+            <TextView
+                android:id="@+id/txt_Request_AB_Exp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Send request to chosen friend"
+                android:textColor="#fff"
+                android:textSize="15sp"
+                android:layout_centerVertical="true"
+                />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_SendRequest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SEND"
+            android:textSize="20sp"
+            android:textColor="@color/colorAccent"
+            android:background="#fff"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

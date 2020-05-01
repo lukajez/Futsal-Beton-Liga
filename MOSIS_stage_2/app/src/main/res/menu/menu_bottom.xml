@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/map"
+        android:title="Map"
+        android:icon="@drawable/ic_union_1"
+        app:cnb_backgroundColor="#fff"
+        app:cnb_iconColor="#262626"
+        app:cnb_textColor="#262626"
+        />
+
+    <item
+        android:id="@+id/request"
+        android:title="Requests"
+        android:icon="@drawable/ic_requests"
+        app:cnb_backgroundColor="#fff"
+        app:cnb_iconColor="#262626"
+        app:cnb_textColor="#262626"
+        />
+
+    <item
+        android:id="@+id/search"
+        android:title="Search"
+        android:icon="@drawable/ic_search"
+        app:cnb_backgroundColor="#fff"
+        app:cnb_iconColor="#262626"
+        app:cnb_textColor="#262626"
+        />
+
+    <item
+        android:id="@+id/menu_profile"
+        android:title="Profile"
+        android:icon="@drawable/ic_profile"
+        app:cnb_backgroundColor="#fff"
+        app:cnb_iconColor="#262626"
+        app:cnb_textColor="#262626"
+        />
+</menu>
