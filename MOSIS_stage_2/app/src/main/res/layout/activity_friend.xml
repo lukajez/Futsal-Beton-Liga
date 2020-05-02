@@ -1,9 +1,161 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".FriendActivity">
+    tools:context=".FriendActivity"
+    android:orientation="vertical"
+    android:background="#262626">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <RelativeLayout
+        android:id="@+id/lay_profile_top"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:background="@drawable/ic_map_network">
+
+        <RelativeLayout
+            android:id="@+id/lay_profile_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/img_friend_profile_icon"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_marginTop="15dp"
+                android:src="@drawable/ic_profile_user"
+                android:layout_centerInParent="true"
+                />
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/lay_profile_info"
+            android:layout_below="@+id/lay_profile_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:layout_centerInParent="true"
+            android:layout_centerHorizontal="true">
+
+            <TextView
+                android:id="@+id/txt_friend_profile_username"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColorHint="#6f6f6f"
+                android:hint="USERNAME"
+                android:textSize="20sp"
+                android:textColor="#fff"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                />
+
+            <TextView
+                android:id="@+id/txt_friend_profile_team"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColorHint="#6f6f6f"
+                android:hint="TEAM"
+                android:textSize="20sp"
+                android:textColor="#fff"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                />
+
+            <TextView
+                android:id="@+id/txt_friend_profile_points"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColorHint="#6f6f6f"
+                android:hint="POINTS"
+                android:textSize="20sp"
+                android:textColor="#fff"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                />
+
+        </LinearLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/lay_profile_bot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lay_profile_top"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/lay_profile_matches"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp">
+            <TextView
+                android:id="@+id/txt_profile_my_matches"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MY MATCHES"
+                android:textSize="20sp"
+                android:textColor="#fff"
+                />
+            <TextView
+                android:id="@+id/txt_profile_my_matchesExp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="All matches which you added"
+                android:textSize="15sp"
+                android:textColor="#fff"
+                />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/lay_friends_profile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/lay_profile_matches"
+            android:orientation="vertical"
+            android:layout_marginTop="40dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp">
+
+            <TextView
+                android:id="@+id/txt_profile_my_friends"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MY FRIENDS"
+                android:textSize="20sp"
+                android:textColor="#fff"
+                />
+            <TextView
+                android:id="@+id/txt_profile_my_friendsExp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="List of all your friends"
+                android:textSize="15sp"
+                android:textColor="#fff"
+                />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_below="@+id/lay_friends_profile">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_friends_profile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+
+
+
+    </RelativeLayout>
+
+</LinearLayout>

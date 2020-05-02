@@ -13,8 +13,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#3d3d3d"
-        android:paddingTop="15dp"
-        android:paddingBottom="15dp">
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

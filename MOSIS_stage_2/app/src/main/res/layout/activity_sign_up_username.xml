@@ -17,7 +17,7 @@
             android:id="@+id/elfak"
             android:layout_width="match_parent"
             android:layout_height="500px"
-            android:src="@drawable/ic_sn"
+            android:src="@drawable/ic_logo"
             />
     </LinearLayout>
 
@@ -64,14 +64,14 @@
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
                 android:text="Sign Up"
-                android:textColor="#FFB350"
+                android:textColor="#fff"
                 android:textSize="15pt" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="6dp"
                 android:orientation="vertical"
-                android:background="#FFB350"
+                android:background="#fff"
                 >
             </LinearLayout>
 
@@ -110,12 +110,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="45dp"
                 android:hint="Username"
-                android:textColorHint="#FFB350"
+                android:textColorHint="#6f6f6f"
                 android:paddingLeft="10dp"
                 android:layout_gravity="start"
                 android:textAlignment="textStart"
                 android:textAllCaps="false"
-                android:textColor="#FFB350"
+                android:textColor="#fff"
                 android:textSize="20dp"
                 android:background="#262626"
 
@@ -123,8 +123,8 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="3dp"
-                android:background="#FFB350">
+                android:layout_height="2dp"
+                android:background="#fff">
             </LinearLayout>
 
         </LinearLayout>
@@ -151,7 +151,7 @@
         android:layout_below="@+id/formLO"
         android:layout_alignEnd="@+id/formLO"
         android:layout_alignRight="@+id/formLO"
-        android:background="@drawable/btnpolje"
+        android:background="#fff"
         android:text="Next"
         android:textSize="20sp"
         android:textColor="#262626"

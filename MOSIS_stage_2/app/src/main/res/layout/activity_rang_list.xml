@@ -1,9 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".RangListActivity">
+    tools:context=".RangListActivity"
+    android:background="#262626">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <RelativeLayout
+        android:id="@+id/lay_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        android:background="@drawable/menu_shape">
+
+        <Button
+            android:id="@+id/btn_Back_RangList"
+            android:layout_width="16dp"
+            android:layout_height="35dp"
+            android:background="@drawable/ic_back_filled"
+            android:layout_centerVertical="true"
+            />
+        <TextView
+            android:id="@+id/txt_Rang_List"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RANG LIST"
+            android:textColor="#fff"
+            android:textSize="15pt"
+            android:layout_centerInParent="true"
+            />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/lay_friends_profile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lay_header"
+        android:orientation="vertical"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp">
+
+        <TextView
+            android:id="@+id/txt_rangList_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RANG LIST"
+            android:textSize="20sp"
+            android:textColor="#fff"
+            />
+
+        <TextView
+            android:id="@+id/txt_rangList_infoExp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ranking list from best to the worst"
+            android:textSize="15sp"
+            android:textColor="#fff"
+            />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_below="@+id/lay_friends_profile">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_RangList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+</RelativeLayout>

@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -34,6 +35,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,14 +47,11 @@ public class SignUpPhoto extends AppCompatActivity {
     private static final int TAKE_IMAGE_CODE = 10001;
     private static final int CAMERA_REQUEST_CODE = 1;
     private StorageReference mStorageRef;
-    Button btnUpload;
+    Button btnUpload, btnBackTeam, btnUploadPhoto;
     Uri pickedImageUri;
     FirebaseAuth firebaseAuth;
     CircleImageView profileImageView;
-    TextView loginL;
-    TextView registerL;
-    Button btnBackTeam;
-    Button btnUploadPhoto;
+    TextView loginL, registerL;
     FirebaseFirestore fStore = FirebaseFirestore.getInstance();
     DocumentReference docRef;
 
@@ -60,6 +59,12 @@ public class SignUpPhoto extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up_photo);
+
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+        }
 
         //region Handler za PutExtra
         if (savedInstanceState == null) {
@@ -103,13 +108,20 @@ public class SignUpPhoto extends AppCompatActivity {
             public void onClick(View v) {
 
                 DocumentReference documentReference = fStore.collection("users").document(userID);
+                ArrayList<String> friends = new ArrayList<>();
+
                 Map<String, Object> user = new HashMap<>();
                 user.put("user_id", userID);
                 user.put("email", email);
                 user.put("username", username);
                 user.put("points", 0);
                 user.put("team", team);
-                user.put("image_url", pickedImageUri.toString());
+
+                if(pickedImageUri != null)
+                    user.put("image_url", pickedImageUri.toString());
+                else user.put("image_url", "");
+
+                user.put("friends", friends);
 
                 documentReference.set(user).addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override

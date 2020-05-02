@@ -9,11 +9,13 @@ public class Users {
 
     public String username, team, points, image;
 
-    public Users(String username, String team, String points) {
-        this.username = username;
-        this.team = team;
-        //this.image = image;
-        this.points = points;
+    public Users() {}
+
+    public Users(Users users) {
+        this.username = users.getUsername();
+        this.team = users.getTeam();
+        this.points = users.getPoints();
+        this.image = users.getImage();
     }
 
     public Users(String username, String team, String points, String image) {

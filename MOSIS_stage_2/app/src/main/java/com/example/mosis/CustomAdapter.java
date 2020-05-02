@@ -36,9 +36,19 @@ public class CustomAdapter extends RecyclerView.Adapter<ViewHolder> {
         ViewHolder viewHolder = new ViewHolder(itemView);
 
         viewHolder.setOnClickLIstener(new ViewHolder.ClickListener() {
+            //set on click to go to
             @Override
             public void onItemClick(View view, int position) {
-                Intent intent = new Intent( context, BluetoothActivity.class);
+
+                //Users users = new Users(usersList.get(position));
+
+                Intent intent = new Intent( context, FriendActivity.class);
+
+                intent.putExtra("username", usersList.get(position).getUsername());
+                intent.putExtra("team", usersList.get(position).getTeam());
+                intent.putExtra("points", usersList.get(position).getPoints());
+                intent.putExtra("image", usersList.get(position).getImage());
+
                 context.startActivity(intent);
                 Activity activity = (Activity) context;
                 activity.overridePendingTransition(0, 0);
@@ -54,11 +64,18 @@ public class CustomAdapter extends RecyclerView.Adapter<ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Uri uri = Uri.parse(usersList.get(position).getImage());
+
         holder.modelUsername.setText(usersList.get(position).getUsername());
         holder.modelTeam.setText(usersList.get(position).getTeam());
         holder.modelPoins.setText(usersList.get(position).getPoints());
-        Glide.with(context).load(uri).into(holder.modelImage);
+
+        Uri uri;
+        if(usersList.get(position).getImage().length() > 0) {
+            uri = Uri.parse(usersList.get(position).getImage());
+            Glide.with(context).load(uri).into(holder.modelImage);
+        } else {
+            holder.modelImage.setImageResource(R.drawable.ic_profile_user);
+        }
     }
 
     @Override

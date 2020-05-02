@@ -157,6 +157,7 @@
             android:layout_height="wrap_content"
             android:text="STATUS"
             android:textSize="20sp"
+            android:textColor="#fff"
             android:layout_centerHorizontal="true"/>
 
         <ListView

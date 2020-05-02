@@ -4,10 +4,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.TextView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationItemView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.ismaeldivita.chipnavigation.ChipNavigationBar;
 
@@ -22,6 +27,12 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+        }
+
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         bottomNav = findViewById(R.id.bottom_nav);
@@ -31,7 +42,6 @@ public class HomeActivity extends AppCompatActivity {
             fragmentManager = getSupportFragmentManager();
             MapFragment mapFragment = new MapFragment();
             fragmentManager.beginTransaction().replace(R.id.fragment_container, mapFragment).commit();
-
         }
 
         bottomNav.setOnItemSelectedListener(new ChipNavigationBar.OnItemSelectedListener() {
@@ -62,6 +72,9 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
         });
+
+
+
 //        final StorageReference reference = FirebaseStorage.getInstance().getReference()
 //                .child("profileImages")
 //                .child(uid + ".jpeg");

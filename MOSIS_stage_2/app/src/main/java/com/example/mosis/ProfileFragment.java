@@ -42,13 +42,13 @@ import java.util.ArrayList;
 
 public class ProfileFragment extends Fragment {
 
-    TextView txtUsername, txt_addFriend_Profile, txtTeam, txtPoints, txt_profile_my_matches, txt_profile_my_friends, txt_profile_my_friendsExp, txt_profile_my_matchesExp;
+    TextView txtUsername, txt_addFriend_Profile, txtTeam, txtPoints, txt_profile_my_matches, txt_profile_my_friends, txt_profile_my_friendsExp, txt_profile_my_matchesExp, txt_RangList_Profile;
     View view;
     FirebaseFirestore db;
     FirebaseUser user;
     ImageView imageView;
     Uri pickedImage;
-    ImageButton btnAddFriendRequest;
+    ImageButton btnAddFriendRequest, btnRangList;
     RecyclerView recycler_friends_profile;
     CustomAdapter adapter;
     RecyclerView.LayoutManager layoutManager;
@@ -65,11 +65,12 @@ public class ProfileFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_profile, container, false);
 
         btnAddFriendRequest = (ImageButton) view.findViewById(R.id.btnAddFriendRequest);
+        btnRangList = (ImageButton) view.findViewById(R.id.btnRangList);
         recycler_friends_profile = (RecyclerView) view.findViewById(R.id.recycler_friends_profile);
-
         recycler_friends_profile.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(getContext());
         recycler_friends_profile.setLayoutManager(layoutManager);
+
         friends = new ArrayList<>();
         friendsList = new ArrayList<>();
 
@@ -83,7 +84,21 @@ public class ProfileFragment extends Fragment {
                     getActivity().overridePendingTransition(0,0);
 
                 } finally {
-//                    getActivity().finish();
+                    getActivity().finish();
+                }
+            }
+        });
+
+        btnRangList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Intent intent = new Intent(getActivity(), RangListActivity.class);
+                    startActivity(intent);
+                    getActivity().overridePendingTransition(0,0);
+
+                } finally {
+                    getActivity().finish();
                 }
             }
         });
@@ -133,9 +148,6 @@ public class ProfileFragment extends Fragment {
 
             }
         });
-
-        Log.d("FRIENDS 2", "THESE ARE FRIENDS: " + friends);
-
     }
 
     private void setUpFriends(ArrayList<String> friends) {
@@ -195,7 +207,9 @@ public class ProfileFragment extends Fragment {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if(task.isSuccessful()) {
                             for(DocumentSnapshot documentSnapshot : task.getResult()) {
-                                pickedImage = Uri.parse(documentSnapshot.get("image_url").toString());
+                                if(documentSnapshot.get("image_url").toString().length() > 0)
+                                    pickedImage = Uri.parse(documentSnapshot.get("image_url").toString());
+
                                 Log.d("TAG", "onSuccess DOWNLOAD URL IS: " + documentSnapshot.get("image_url").toString());
                                 txtUsername.setText((CharSequence) documentSnapshot.get("username"));
                                 txtTeam.setText((CharSequence) documentSnapshot.get("team"));
@@ -243,6 +257,9 @@ public class ProfileFragment extends Fragment {
 
         txt_profile_my_friends = (TextView) view.findViewById(R.id.txt_profile_my_friends);
         txt_profile_my_friends.setTypeface(typeface);
+
+        txt_RangList_Profile = (TextView) view.findViewById(R.id.txt_RangList_Profile);
+        txt_RangList_Profile.setTypeface(typeface);
 
         Typeface typeface2 = Typeface.createFromAsset(getContext().getAssets(), "fonts/adventproregular.ttf");
 
