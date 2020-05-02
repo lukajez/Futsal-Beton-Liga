@@ -49,7 +49,7 @@ import java.util.UUID;
 public class BluetoothActivity<DeviceItem> extends AppCompatActivity {
 
     //region VIEWS
-    Button showBtn, btnBack, buttonOn, buttonOff, btnSendRequest;
+    Button showBtn, btnBack, buttonOn, buttonOff, btnSendRequest, btn_Back_BlueT;
     ListView listView;
     TextView txtStatus, txtAddFr, txtConn, txt_Request_AB, txt_Request_AB_Exp, txt_Scan_AB, txt_Scan_AB_Exp, txt_ConnentionExp;
     //endregion
@@ -87,6 +87,7 @@ public class BluetoothActivity<DeviceItem> extends AppCompatActivity {
         listView = (ListView) findViewById(R.id.list_paired);
         txtStatus = (TextView) findViewById(R.id.txt_status);
         btnSendRequest = (Button) findViewById(R.id.btn_SendRequest);
+        btn_Back_BlueT = (Button) findViewById(R.id.btn_Back_BlueT);
 
         btDevices = new ArrayList<>();
         myBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -144,6 +145,23 @@ public class BluetoothActivity<DeviceItem> extends AppCompatActivity {
             public void onClick(View v) {
                 if(statusListener == "Connected Successfully!") {
                     sendReceive.write(uuid.getBytes());
+                }
+            }
+        });
+        //endregion
+
+        //region BUTTON BACK
+        btn_Back_BlueT.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                try {
+                    Intent intent = new Intent(BluetoothActivity.this, HomeActivity.class);
+                    startActivity(intent);
+                    overridePendingTransition(0,0);
+
+                } finally {
+                    finish();
                 }
             }
         });

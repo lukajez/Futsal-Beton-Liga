@@ -119,9 +119,9 @@ public class SearchFragment extends Fragment {
                         usersList.add(users);
                     }
 
-                adapter = new CustomAdapter(getContext(), usersList);
-                recyclerView.setAdapter(adapter);
-            }
+                    adapter = new CustomAdapter(getContext(), usersList);
+                    recyclerView.setAdapter(adapter);
+                }
             }
         });
     }
@@ -158,9 +158,6 @@ public class SearchFragment extends Fragment {
         } else {
             showData();
         }
-
-
-
     }
 
     protected void setUpFont(){

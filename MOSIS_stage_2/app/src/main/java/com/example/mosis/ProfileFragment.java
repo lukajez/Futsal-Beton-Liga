@@ -10,17 +10,22 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -32,27 +37,58 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.ArrayList;
+
 
 public class ProfileFragment extends Fragment {
 
-    TextView txtUsername;
-    TextView txtTeam;
-    TextView txtPoints;
+    TextView txtUsername, txt_addFriend_Profile, txtTeam, txtPoints, txt_profile_my_matches, txt_profile_my_friends, txt_profile_my_friendsExp, txt_profile_my_matchesExp;
     View view;
     FirebaseFirestore db;
     FirebaseUser user;
     ImageView imageView;
     Uri pickedImage;
+    ImageButton btnAddFriendRequest;
+    RecyclerView recycler_friends_profile;
+    CustomAdapter adapter;
+    RecyclerView.LayoutManager layoutManager;
+    ArrayList<String> friends;
+    ArrayList<Users> friendsList;
+
     private static final int TAKE_IMAGE_CODE = 10001;
 
     public ProfileFragment() {}
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_profile, container, false);
 
+        btnAddFriendRequest = (ImageButton) view.findViewById(R.id.btnAddFriendRequest);
+        recycler_friends_profile = (RecyclerView) view.findViewById(R.id.recycler_friends_profile);
+
+        recycler_friends_profile.setHasFixedSize(true);
+        layoutManager = new LinearLayoutManager(getContext());
+        recycler_friends_profile.setLayoutManager(layoutManager);
+        friends = new ArrayList<>();
+        friendsList = new ArrayList<>();
+
+        btnAddFriendRequest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                try {
+                    Intent intent = new Intent(getActivity(), BluetoothActivity.class);
+                    startActivity(intent);
+                    getActivity().overridePendingTransition(0,0);
+
+                } finally {
+//                    getActivity().finish();
+                }
+            }
+        });
+
+        this.getMyFriends();
         this.setUpInfo();
         this.setUpFont();
         return view;
@@ -75,6 +111,73 @@ public class ProfileFragment extends Fragment {
 //            }
 //        }
 //    }
+
+    private void getMyFriends() {
+
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        String uuid = auth.getCurrentUser().getUid();
+
+        db = FirebaseFirestore.getInstance();
+
+        db.collection("users").document(uuid).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                friends = (ArrayList<String>) documentSnapshot.get("friends");
+                Log.d("FRIENDS", "THESE ARE FRIENDS: " + friends);
+                setUpFriends(friends);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });
+
+        Log.d("FRIENDS 2", "THESE ARE FRIENDS: " + friends);
+
+    }
+
+    private void setUpFriends(ArrayList<String> friends) {
+
+        db = FirebaseFirestore.getInstance();
+
+        for(String fr : friends) {
+
+            db.collection("users").whereEqualTo("user_id", fr).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    if(task.isSuccessful()) {
+                        for(DocumentSnapshot documentSnapshot : task.getResult()) {
+
+                            Log.d("TAG SET UP FRIENDS", documentSnapshot.get("username").toString() + " " + documentSnapshot.get("team").toString());
+                            Users users = new Users((String) documentSnapshot.get("username").toString(), (String) documentSnapshot.get("team").toString(), (String) documentSnapshot.get("points").toString(), (String) documentSnapshot.get("image_url"));
+                            friendsList.add(users);
+                        }
+
+                        adapter = new CustomAdapter(getContext(), friendsList);
+                        recycler_friends_profile.setAdapter(adapter);
+                    }
+                }
+            });
+
+//            db.collection("users").document(fr).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+//                @Override
+//                public void onSuccess(DocumentSnapshot documentSnapshot) {
+//
+//                    Users users = new Users((String) documentSnapshot.get("username").toString(), (String) documentSnapshot.get("team").toString(), (String) documentSnapshot.get("points").toString(), (String) documentSnapshot.get("image_url"));
+//                    friendsList.add(users);
+//                }
+//            }).addOnFailureListener(new OnFailureListener() {
+//                @Override
+//                public void onFailure(@NonNull Exception e) {
+//
+//                }
+//            });
+        }
+
+        Log.d("FRIENDS LIST", "THESE ARE YOUR FRIENDS: " + friendsList);
+    }
 
     protected void setUpInfo() {
         txtUsername = (TextView) view.findViewById(R.id.txt_profile_username);
@@ -113,17 +216,6 @@ public class ProfileFragment extends Fragment {
 
     }
 
-//    private void getDownloadUrl(StorageReference reference, final ImageView img) {
-//        reference.getDownloadUrl()
-//                .addOnSuccessListener(new OnSuccessListener<Uri>() {
-//                    @Override
-//                    public void onSuccess(Uri uri) {
-//                        Log.d("TAG", "onSuccess DOWNLOAD URL IS: " + uri);
-//                        setUserProfileUrl(uri, img);
-//                    }
-//                });
-//    }
-
     private void setUserProfileUrl(Uri uri, ImageView img) {
         Log.d("SET USER PROFILE URL FUN", "onSuccess DOWNLOAD URL IS: " + uri);
 
@@ -136,11 +228,29 @@ public class ProfileFragment extends Fragment {
         Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "fonts/bebasneue.ttf");
         txtUsername = (TextView) view.findViewById(R.id.txt_profile_username);
         txtUsername.setTypeface(typeface);
+
         txtTeam = (TextView) view.findViewById(R.id.txt_profile_team);
         txtTeam.setTypeface(typeface);
+
         txtPoints = (TextView) view.findViewById(R.id.txt_profile_points);
         txtPoints.setTypeface(typeface);
 
+        txt_addFriend_Profile = (TextView) view.findViewById(R.id.txt_addFriend_Profile);
+        txt_addFriend_Profile.setTypeface(typeface);
+
+        txt_profile_my_matches = (TextView) view.findViewById(R.id.txt_profile_my_matches);
+        txt_profile_my_matches.setTypeface(typeface);
+
+        txt_profile_my_friends = (TextView) view.findViewById(R.id.txt_profile_my_friends);
+        txt_profile_my_friends.setTypeface(typeface);
+
+        Typeface typeface2 = Typeface.createFromAsset(getContext().getAssets(), "fonts/adventproregular.ttf");
+
+        txt_profile_my_friendsExp = (TextView) view.findViewById(R.id.txt_profile_my_friendsExp);
+        txt_profile_my_friendsExp.setTypeface(typeface2);
+
+        txt_profile_my_matchesExp = (TextView) view.findViewById(R.id.txt_profile_my_matchesExp);
+        txt_profile_my_matchesExp.setTypeface(typeface2);
         //endregion
     }
 }

@@ -11,20 +11,52 @@
         android:layout_height="300dp"
         android:background="@drawable/ic_map_network">
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/img_profile_icon"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:layout_marginTop="15dp"
-            android:layout_centerHorizontal="true"
-            android:src="@drawable/ic_profile_user"
-            android:onClick="handleImageClick"
-            />
+        <RelativeLayout
+            android:id="@+id/lay_profile_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/img_profile_icon"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_marginTop="15dp"
+                android:src="@drawable/ic_profile_user"
+                android:onClick="handleImageClick"
+                android:layout_centerInParent="true"
+                />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="20dp"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <ImageButton
+                    android:id="@+id/btnAddFriendRequest"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:textSize="20sp"
+                    android:background="@drawable/ic_add_friend"
+                    />
+                <TextView
+                    android:id="@+id/txt_addFriend_Profile"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ADD FRIEND"
+                    android:textSize="18sp"
+                    android:textColor="#fff"/>
+            </LinearLayout>
+
+        </RelativeLayout>
+
         <LinearLayout
             android:id="@+id/lay_profile_info"
-            android:layout_below="@+id/img_profile_icon"
+            android:layout_below="@+id/lay_profile_header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -37,30 +69,36 @@
                 android:id="@+id/txt_profile_username"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColorHint="#ff785b"
-                android:hint=""
-                android:textSize="25sp"
-                android:textColor="#ff785b"
+                android:textColorHint="#6f6f6f"
+                android:hint="USERNAME"
+                android:textSize="20sp"
+                android:textColor="#fff"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
                 />
 
             <TextView
                 android:id="@+id/txt_profile_team"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColorHint="#ff785b"
-                android:hint=""
-                android:textSize="25sp"
-                android:textColor="#ff785b"
+                android:textColorHint="#6f6f6f"
+                android:hint="TEAM"
+                android:textSize="20sp"
+                android:textColor="#fff"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
                 />
 
             <TextView
                 android:id="@+id/txt_profile_points"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColorHint="#ff785b"
-                android:hint=""
-                android:textSize="25sp"
-                android:textColor="#ff785b"
+                android:textColorHint="#6f6f6f"
+                android:hint="POINTS"
+                android:textSize="20sp"
+                android:textColor="#fff"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
                 />
 
         </LinearLayout>
@@ -75,31 +113,58 @@
         <LinearLayout
             android:id="@+id/lay_profile_matches"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp">
             <TextView
                 android:id="@+id/txt_profile_my_matches"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColorHint="#fff"
-                android:hint="MY MATCHES"
-                android:textSize="10pt"
-                android:textColor="#ff785b"
+                android:text="MY MATCHES"
+                android:textSize="20sp"
+                android:textColor="#fff"
+                />
+            <TextView
+                android:id="@+id/txt_profile_my_matchesExp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="All matches which you added"
+                android:textSize="15sp"
+                android:textColor="#fff"
                 />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/lay_profile_matches">
+            android:layout_below="@+id/lay_profile_matches"
+            android:orientation="vertical"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp">
+
             <TextView
                 android:id="@+id/txt_profile_my_friends"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColorHint="#fff"
-                android:hint="MY FRIENDS"
-                android:textSize="10pt"
-                android:textColor="#ff785b"
+                android:text="MY FRIENDS"
+                android:textSize="20sp"
+                android:textColor="#fff"
                 />
+            <TextView
+                android:id="@+id/txt_profile_my_friendsExp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="List of all your friends"
+                android:textSize="15sp"
+                android:textColor="#fff"
+                />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_friends_profile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"/>
         </LinearLayout>
 
 

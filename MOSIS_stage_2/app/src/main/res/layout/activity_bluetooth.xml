@@ -17,7 +17,7 @@
             android:id="@+id/btn_Back_BlueT"
             android:layout_width="16dp"
             android:layout_height="35dp"
-            android:background="@drawable/ic_back"
+            android:background="@drawable/ic_back_filled"
             android:layout_centerVertical="true"
             />
         <TextView
