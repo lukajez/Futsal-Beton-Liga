@@ -23,4 +23,11 @@
             android:layout_centerInParent="true"
             />
     </RelativeLayout>
+
+    <com.google.android.gms.maps.MapView
+        android:id="@+id/mapView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/lay_header"/>
+
 </RelativeLayout>

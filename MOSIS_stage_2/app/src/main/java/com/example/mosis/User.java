@@ -1,24 +1,19 @@
 package com.example.mosis;
 
-import android.media.Image;
-import android.widget.ImageView;
-
-import de.hdodenhof.circleimageview.CircleImageView;
-
-public class Users {
+public class User {
 
     public String username, team, points, image;
 
-    public Users() {}
+    public User() {}
 
-    public Users(Users users) {
-        this.username = users.getUsername();
-        this.team = users.getTeam();
-        this.points = users.getPoints();
-        this.image = users.getImage();
+    public User(User user) {
+        this.username = user.getUsername();
+        this.team = user.getTeam();
+        this.points = user.getPoints();
+        this.image = user.getImage();
     }
 
-    public Users(String username, String team, String points, String image) {
+    public User(String username, String team, String points, String image) {
         this.username = username;
         this.team = team;
         this.image = image;

@@ -14,12 +14,9 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -38,7 +35,7 @@ public class RangListActivity extends AppCompatActivity {
     CustomAdapter adapter;
     RecyclerView.LayoutManager layoutManager;
     FirebaseFirestore db;
-    List<Users> usersList = new ArrayList<>();
+    List<User> userList = new ArrayList<>();
 
 
     @Override
@@ -87,16 +84,16 @@ public class RangListActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if(task.isSuccessful()) {
 
-                    usersList.clear();
+                    userList.clear();
 
                     for(DocumentSnapshot documentSnapshot : Objects.requireNonNull(task.getResult())) {
 
                         Log.d("TAG", Objects.requireNonNull(documentSnapshot.get("username")).toString() + " " + Objects.requireNonNull(documentSnapshot.get("team")).toString());
-                        Users users = new Users(Objects.requireNonNull(documentSnapshot.get("username")).toString(), Objects.requireNonNull(documentSnapshot.get("team")).toString(), Objects.requireNonNull(documentSnapshot.get("points")).toString(), Objects.requireNonNull(documentSnapshot.get("image_url")).toString());
-                        usersList.add(users);
+                        User user = new User(Objects.requireNonNull(documentSnapshot.get("username")).toString(), Objects.requireNonNull(documentSnapshot.get("team")).toString(), Objects.requireNonNull(documentSnapshot.get("points")).toString(), Objects.requireNonNull(documentSnapshot.get("image_url")).toString());
+                        userList.add(user);
                     }
 
-                    adapter = new CustomAdapter(getApplicationContext(), usersList);
+                    adapter = new CustomAdapter(getApplicationContext(), userList);
                     recycler_RangList.setAdapter(adapter);
                 }
             }

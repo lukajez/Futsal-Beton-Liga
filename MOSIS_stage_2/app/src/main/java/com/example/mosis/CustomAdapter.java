@@ -1,7 +1,6 @@
 package com.example.mosis;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -20,11 +19,11 @@ public class CustomAdapter extends RecyclerView.Adapter<ViewHolder> {
 
     //SearchFragment searchFragment;
     Context context;
-    List<Users> usersList;
+    List<User> userList;
 
-    public CustomAdapter(Context context, List<Users> usersList) {
+    public CustomAdapter(Context context, List<User> userList) {
         this.context = context;
-        this.usersList = usersList;
+        this.userList = userList;
 //        this.context = context;
     }
 
@@ -40,14 +39,14 @@ public class CustomAdapter extends RecyclerView.Adapter<ViewHolder> {
             @Override
             public void onItemClick(View view, int position) {
 
-                //Users users = new Users(usersList.get(position));
+                //User users = new User(userList.get(position));
 
                 Intent intent = new Intent( context, FriendActivity.class);
 
-                intent.putExtra("username", usersList.get(position).getUsername());
-                intent.putExtra("team", usersList.get(position).getTeam());
-                intent.putExtra("points", usersList.get(position).getPoints());
-                intent.putExtra("image", usersList.get(position).getImage());
+                intent.putExtra("username", userList.get(position).getUsername());
+                intent.putExtra("team", userList.get(position).getTeam());
+                intent.putExtra("points", userList.get(position).getPoints());
+                intent.putExtra("image", userList.get(position).getImage());
 
                 context.startActivity(intent);
                 Activity activity = (Activity) context;
@@ -65,13 +64,13 @@ public class CustomAdapter extends RecyclerView.Adapter<ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 
-        holder.modelUsername.setText(usersList.get(position).getUsername());
-        holder.modelTeam.setText(usersList.get(position).getTeam());
-        holder.modelPoins.setText(usersList.get(position).getPoints());
+        holder.modelUsername.setText(userList.get(position).getUsername());
+        holder.modelTeam.setText(userList.get(position).getTeam());
+        holder.modelPoins.setText(userList.get(position).getPoints());
 
         Uri uri;
-        if(usersList.get(position).getImage().length() > 0) {
-            uri = Uri.parse(usersList.get(position).getImage());
+        if(userList.get(position).getImage().length() > 0) {
+            uri = Uri.parse(userList.get(position).getImage());
             Glide.with(context).load(uri).into(holder.modelImage);
         } else {
             holder.modelImage.setImageResource(R.drawable.ic_profile_user);
@@ -80,6 +79,6 @@ public class CustomAdapter extends RecyclerView.Adapter<ViewHolder> {
 
     @Override
     public int getItemCount() {
-        return usersList.size();
+        return userList.size();
     }
 }

@@ -1,8 +1,6 @@
 package com.example.mosis;
 
-import android.content.ClipData;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -13,29 +11,22 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.firestore.auth.User;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import de.hdodenhof.circleimageview.CircleImageView;
 
 
 /**
@@ -48,7 +39,7 @@ public class SearchFragment extends Fragment {
     String searchTerm;
     ImageButton searchButton;
     FirebaseFirestore db;
-    List<Users> usersList = new ArrayList<>();
+    List<User> userList = new ArrayList<>();
     RecyclerView.LayoutManager layoutManager;
     CustomAdapter adapter;
     View view;
@@ -119,11 +110,11 @@ public class SearchFragment extends Fragment {
                     for(DocumentSnapshot documentSnapshot : task.getResult()) {
 
                         Log.d("TAG", documentSnapshot.get("username").toString() + " " + documentSnapshot.get("team").toString());
-                        Users users = new Users((String) documentSnapshot.get("username").toString(), (String) documentSnapshot.get("team").toString(), (String) documentSnapshot.get("points").toString(), (String) documentSnapshot.get("image_url"));
-                        usersList.add(users);
+                        User user = new User((String) documentSnapshot.get("username").toString(), (String) documentSnapshot.get("team").toString(), (String) documentSnapshot.get("points").toString(), (String) documentSnapshot.get("image_url"));
+                        userList.add(user);
                     }
 
-                    adapter = new CustomAdapter(getContext(), usersList);
+                    adapter = new CustomAdapter(getContext(), userList);
                     recyclerView.setAdapter(adapter);
                 }
             }
@@ -142,14 +133,14 @@ public class SearchFragment extends Fragment {
                 @Override
                 public void onComplete(@NonNull Task<QuerySnapshot> task) {
                     if(task.isSuccessful()) {
-                        usersList.clear();
+                        userList.clear();
                         for(DocumentSnapshot documentSnapshot : task.getResult()) {
                             Log.d("TAG", documentSnapshot.get("username").toString() + " " + documentSnapshot.get("team").toString());
-                            Users users = new Users((String) documentSnapshot.get("username").toString(), (String) documentSnapshot.get("team").toString(), (String) documentSnapshot.get("points").toString(), (String) documentSnapshot.get("image_url"));
-                            usersList.add(users);
+                            User user = new User((String) documentSnapshot.get("username").toString(), (String) documentSnapshot.get("team").toString(), (String) documentSnapshot.get("points").toString(), (String) documentSnapshot.get("image_url"));
+                            userList.add(user);
                         }
 
-                        adapter = new CustomAdapter(getContext(), usersList);
+                        adapter = new CustomAdapter(getContext(), userList);
                         recyclerView.setAdapter(adapter);
                     }
                 }

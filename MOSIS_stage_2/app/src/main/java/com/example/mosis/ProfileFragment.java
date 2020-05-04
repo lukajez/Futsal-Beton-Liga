@@ -53,7 +53,7 @@ public class ProfileFragment extends Fragment {
     private RecyclerView recycler_friends_profile;
     private CustomAdapter adapter;
     private ArrayList<String> friends;
-    private ArrayList<Users> friendsList;
+    private ArrayList<User> friendsList;
 
     public ProfileFragment() {}
 
@@ -161,8 +161,8 @@ public class ProfileFragment extends Fragment {
                         for(DocumentSnapshot documentSnapshot : Objects.requireNonNull(task.getResult())) {
 
                             Log.d("TAG SET UP FRIENDS", Objects.requireNonNull(documentSnapshot.get("username")).toString() + " " + Objects.requireNonNull(documentSnapshot.get("team")).toString());
-                            Users users = new Users(Objects.requireNonNull(documentSnapshot.get("username")).toString(), Objects.requireNonNull(documentSnapshot.get("team")).toString(), Objects.requireNonNull(documentSnapshot.get("points")).toString(), Objects.requireNonNull(documentSnapshot.get("image_url")).toString());
-                            friendsList.add(users);
+                            User user = new User(Objects.requireNonNull(documentSnapshot.get("username")).toString(), Objects.requireNonNull(documentSnapshot.get("team")).toString(), Objects.requireNonNull(documentSnapshot.get("points")).toString(), Objects.requireNonNull(documentSnapshot.get("image_url")).toString());
+                            friendsList.add(user);
                         }
 
                         adapter = new CustomAdapter(getContext(), friendsList);
@@ -175,7 +175,7 @@ public class ProfileFragment extends Fragment {
 //                @Override
 //                public void onSuccess(DocumentSnapshot documentSnapshot) {
 //
-//                    Users users = new Users((String) documentSnapshot.get("username").toString(), (String) documentSnapshot.get("team").toString(), (String) documentSnapshot.get("points").toString(), (String) documentSnapshot.get("image_url"));
+//                    User users = new User((String) documentSnapshot.get("username").toString(), (String) documentSnapshot.get("team").toString(), (String) documentSnapshot.get("points").toString(), (String) documentSnapshot.get("image_url"));
 //                    friendsList.add(users);
 //                }
 //            }).addOnFailureListener(new OnFailureListener() {
