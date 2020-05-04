@@ -3,7 +3,26 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SearchFragment">
+    tools:context=".SearchFragment"
+    android:background="@color/colorBackground">
+
+    <RelativeLayout
+        android:id="@+id/lay_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:background="@drawable/menu_shape">
+
+        <TextView
+            android:id="@+id/txt_Search"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SEARCH"
+            android:textColor="#fff"
+            android:textSize="15pt"
+            android:layout_centerInParent="true"
+            />
+    </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/rel_lay_search"
@@ -13,7 +32,8 @@
         android:orientation="horizontal"
         android:layout_marginStart="30dp"
         android:layout_marginEnd="30dp"
-        android:layout_marginTop="30dp">
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/lay_header">
 
 
         <LinearLayout
@@ -47,12 +67,40 @@
 
     </RelativeLayout>
 
+    <RelativeLayout
+        android:id="@+id/lin_lay_search_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_below="@+id/rel_lay_search">
+
+        <TextView
+            android:id="@+id/txt_Search_Hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Search results"
+            android:textSize="20sp"
+            android:textColor="#fff"/>
+
+        <TextView
+            android:id="@+id/txt_Search_HintExp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your search results are:"
+            android:textSize="15sp"
+            android:textColor="#fff"
+            android:layout_below="@+id/txt_Search_Hint"/>
+
+    </RelativeLayout>
+
     <androidx.recyclerview.widget.RecyclerView
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="10dp"
         android:id="@+id/recycler_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/rel_lay_search">
+        android:layout_below="@+id/lin_lay_search_info">
 
     </androidx.recyclerview.widget.RecyclerView>
 </RelativeLayout>

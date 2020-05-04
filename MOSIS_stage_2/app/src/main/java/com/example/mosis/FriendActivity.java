@@ -1,12 +1,14 @@
 package com.example.mosis;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
 
@@ -27,9 +29,11 @@ public class FriendActivity extends AppCompatActivity {
 
         //getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
-        }
+        Window window = this.getWindow();
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(ContextCompat.getColor(this, R.color.colorAccent));
+
 
         //region Handler za PutExtra
         if (savedInstanceState == null) {

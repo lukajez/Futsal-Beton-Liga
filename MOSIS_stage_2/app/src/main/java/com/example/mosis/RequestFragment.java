@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.location.Criteria;
+import android.media.Image;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -20,6 +21,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,6 +41,7 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -46,10 +50,12 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class RequestFragment extends Fragment {
 
     //region VIEWS
-    TextView txtStatusRequest, txtUsernameRequest, txtHintListen, txtConStatus, txtConStatusExp, txtRequestInfo, txtConnectionRQ, txtConnectionRQExp, btnAddFriendRequest, btnBackRequest;
+    TextView txtStatusRequest, txtUsernameRequest, txtHintListen, txtConStatus, txtConStatusExp, txtRequestInfo, txtConnectionRQ, txtConnectionRQExp;
     Button btnAcc, btnDec, btnListen;
+    ImageButton btnAddFriendRequest;
     CircleImageView profileImage;
     View view;
+    RelativeLayout rel_RequestInfo;
     //endregion
 
     //region STATES
@@ -74,6 +80,7 @@ public class RequestFragment extends Fragment {
     SendReceive sendReceive;
     String statusListener;
     String uuid, recUuid;
+    boolean requestReceved = false;
     boolean btAdapterDiscovering;
     //endregion
 
@@ -87,23 +94,22 @@ public class RequestFragment extends Fragment {
 
         view = inflater.inflate(R.layout.fragment_requests, container, false);
 
-        //region PICK VIEWS
-        profileImage = (CircleImageView) view.findViewById(R.id.cimgProfileRequest);
-        txtStatusRequest = (TextView) view.findViewById(R.id.txtStatusRequest);
-        txtUsernameRequest = (TextView) view.findViewById(R.id.txtUsernameRequest);
-        btnAcc = (Button) view.findViewById(R.id.btnAcceptRequest);
-        btnDec = (Button) view.findViewById(R.id.btnDeclineRequest);
-        btnListen = (Button) view.findViewById(R.id.btnListenRequst);
-        //endregion
 
-        //region SET FIREBSE AND OTHER
+        profileImage = view.findViewById(R.id.cimgProfileRequest);
+        txtStatusRequest = view.findViewById(R.id.txtStatusRequest);
+        txtUsernameRequest = view.findViewById(R.id.txtUsernameRequest);
+        btnAcc = view.findViewById(R.id.btnAcceptRequest);
+        btnDec = view.findViewById(R.id.btnDeclineRequest);
+        btnListen = view.findViewById(R.id.btnListenRequst);
+        btnAddFriendRequest = view.findViewById(R.id.btnAddFriendRequest);
+
+
         user = FirebaseAuth.getInstance().getCurrentUser();
         userAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
         myBluetoothAdapter  = BluetoothAdapter.getDefaultAdapter();
         btAdapterDiscovering = myBluetoothAdapter.isDiscovering();
         uuid = user.getUid();
-        //endregion
 
         //region ON BUTTON CLICK LISTENERS
         btnListen.setOnClickListener(new View.OnClickListener() {
@@ -135,9 +141,31 @@ public class RequestFragment extends Fragment {
                 //TODO : method declineRequest
             }
         });
+
+        btnAddFriendRequest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+
+                    Intent intent = new Intent(getContext(), BluetoothActivity.class);
+                    startActivity(intent);
+                    Objects.requireNonNull(getActivity()).overridePendingTransition(0,0);
+
+                } finally {
+                    Objects.requireNonNull(getActivity()).finish();
+                }
+            }
+        });
         //endregion
 
+        rel_RequestInfo = view.findViewById(R.id.rel_RequestInfo);
+        if(recUuid == null) {
+            rel_RequestInfo.setVisibility(View.GONE);
+        } else
+            rel_RequestInfo.setVisibility(View.VISIBLE);
+
         setUpFont();
+
         return view;
     }
 
@@ -189,7 +217,6 @@ public class RequestFragment extends Fragment {
         txtConStatus = (TextView) view.findViewById(R.id.txtConStatus);
         txtConStatusExp = (TextView) view.findViewById(R.id.txtConStatusExp);
         txtRequestInfo = (TextView) view.findViewById(R.id.txtRequestInfo);
-       // btnAddFriendRequest = (TextView) view.findViewById(R.id.btnAddFriendRequest);
         //endregion
 
         //region FontSetUp
@@ -202,7 +229,6 @@ public class RequestFragment extends Fragment {
         txtConnectionRQ.setTypeface(typeface);
         txtConStatus.setTypeface(typeface);
         txtRequestInfo.setTypeface(typeface);
-       // btnAddFriendRequest.setTypeface(typeface);
 
         Typeface typeface2 = Typeface.createFromAsset(getContext().getAssets(), "fonts/adventproregular.ttf");
         txtUsernameRequest.setTypeface(typeface2);
@@ -247,8 +273,14 @@ public class RequestFragment extends Fragment {
                     String pathAsMessage = new String(readBuff,0,msg.arg1);
                     recUuid = pathAsMessage;
 
+                    rel_RequestInfo = view.findViewById(R.id.rel_RequestInfo);
+
+                    if(recUuid == null)
+                        rel_RequestInfo.setVisibility(View.GONE);
+                    else
+                        rel_RequestInfo.setVisibility(View.VISIBLE);
+
                     db = FirebaseFirestore.getInstance();
-                   //FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
 
                     //set path to user, document name is userID, so received message is path to concrete user
                     db.collection("users").document(recUuid).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {

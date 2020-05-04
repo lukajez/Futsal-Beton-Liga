@@ -7,10 +7,48 @@
     android:background="#262626">
 
     <RelativeLayout
+        android:id="@+id/lay_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:background="@drawable/menu_shape">
+
+        <ImageButton
+            android:id="@+id/btnRangList"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_centerVertical="true"
+            android:background="@drawable/ic_rang_list"/>
+
+        <TextView
+            android:id="@+id/txt_Profile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MY PROFILE"
+            android:textColor="#fff"
+            android:textSize="15pt"
+            android:layout_centerInParent="true"
+            />
+
+        <ImageButton
+            android:id="@+id/btnAddFriendRequest"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:textSize="18sp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/ic_add_friend"
+            />
+
+    </RelativeLayout>
+
+
+    <RelativeLayout
         android:id="@+id/lay_profile_top"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:background="@drawable/ic_map_network">
+        android:layout_height="250dp"
+        android:background="@drawable/ic_map_network"
+        android:layout_below="@+id/lay_header">
 
         <RelativeLayout
             android:id="@+id/lay_profile_header"
@@ -18,66 +56,15 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_marginTop="20dp"
-                android:layout_marginStart="20dp"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <ImageButton
-                    android:id="@+id/btnRangList"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/ic_rang_list"/>
-
-                <TextView
-                    android:id="@+id/txt_RangList_Profile"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="RANG LIST"
-                    android:textSize="18sp"
-                    android:textColor="#fff"/>
-
-            </LinearLayout>
-
             <de.hdodenhof.circleimageview.CircleImageView
                 android:id="@+id/img_profile_icon"
-                android:layout_width="150dp"
-                android:layout_height="150dp"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
                 android:layout_marginTop="15dp"
                 android:src="@drawable/ic_profile_user"
                 android:onClick="handleImageClick"
                 android:layout_centerInParent="true"
                 />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_marginTop="20dp"
-                android:layout_marginEnd="20dp"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <ImageButton
-                    android:id="@+id/btnAddFriendRequest"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:textSize="20sp"
-                    android:background="@drawable/ic_add_friend"
-                    />
-
-                <TextView
-                    android:id="@+id/txt_addFriend_Profile"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="ADD FRIEND"
-                    android:textSize="18sp"
-                    android:textColor="#fff"/>
-            </LinearLayout>
 
         </RelativeLayout>
 

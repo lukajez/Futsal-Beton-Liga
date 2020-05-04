@@ -17,6 +17,7 @@ import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -51,6 +52,7 @@ public class SearchFragment extends Fragment {
     RecyclerView.LayoutManager layoutManager;
     CustomAdapter adapter;
     View view;
+    TextView txt_Search, txt_Search_Hint, txt_Search_HintExp;
 
     public SearchFragment() {
         // Required empty public constructor
@@ -77,6 +79,8 @@ public class SearchFragment extends Fragment {
             showData();
         }
         setUpFont();
+
+
 
         searchField.addTextChangedListener(new TextWatcher() {
             @Override
@@ -163,9 +167,19 @@ public class SearchFragment extends Fragment {
     protected void setUpFont(){
 
         //region FontSetUp
-        Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "fonts/adventproregular.ttf");
+        Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "fonts/bebasneue.ttf");
+        txt_Search = (TextView) view.findViewById(R.id.txt_Search);
+        txt_Search.setTypeface(typeface);
+
+        txt_Search_Hint = (TextView) view.findViewById(R.id.txt_Search_Hint);
+        txt_Search_Hint.setTypeface(typeface);
+
+        Typeface typeface2 = Typeface.createFromAsset(getContext().getAssets(), "fonts/adventproregular.ttf");
         searchField = (EditText) view.findViewById(R.id.searchField);
-        searchField.setTypeface(typeface);
+        searchField.setTypeface(typeface2);
+
+        txt_Search_HintExp = (TextView) view.findViewById(R.id.txt_Search_HintExp);
+        txt_Search_HintExp.setTypeface(typeface2);
         //endregion
     }
 

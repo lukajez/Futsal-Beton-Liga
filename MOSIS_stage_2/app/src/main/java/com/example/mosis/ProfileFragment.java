@@ -1,24 +1,24 @@
 package com.example.mosis;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
+
 import android.graphics.Typeface;
-import android.media.Image;
+
 import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.provider.MediaStore;
+
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -32,30 +32,28 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
+
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 
 public class ProfileFragment extends Fragment {
 
-    TextView txtUsername, txt_addFriend_Profile, txtTeam, txtPoints, txt_profile_my_matches, txt_profile_my_friends, txt_profile_my_friendsExp, txt_profile_my_matchesExp, txt_RangList_Profile;
-    View view;
-    FirebaseFirestore db;
-    FirebaseUser user;
-    ImageView imageView;
-    Uri pickedImage;
-    ImageButton btnAddFriendRequest, btnRangList;
-    RecyclerView recycler_friends_profile;
-    CustomAdapter adapter;
-    RecyclerView.LayoutManager layoutManager;
-    ArrayList<String> friends;
-    ArrayList<Users> friendsList;
-
-    private static final int TAKE_IMAGE_CODE = 10001;
+    private TextView txtUsername;
+    private TextView txtTeam;
+    private TextView txtPoints;
+    private View view;
+    private FirebaseFirestore db;
+    private FirebaseUser user;
+    private ImageView imageView;
+    private Uri pickedImage;
+    private RecyclerView recycler_friends_profile;
+    private CustomAdapter adapter;
+    private ArrayList<String> friends;
+    private ArrayList<Users> friendsList;
 
     public ProfileFragment() {}
 
@@ -64,11 +62,11 @@ public class ProfileFragment extends Fragment {
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_profile, container, false);
 
-        btnAddFriendRequest = (ImageButton) view.findViewById(R.id.btnAddFriendRequest);
-        btnRangList = (ImageButton) view.findViewById(R.id.btnRangList);
-        recycler_friends_profile = (RecyclerView) view.findViewById(R.id.recycler_friends_profile);
+        ImageButton btnAddFriendRequest = view.findViewById(R.id.btnAddFriendRequest);
+        ImageButton btnRangList = view.findViewById(R.id.btnRangList);
+        recycler_friends_profile = view.findViewById(R.id.recycler_friends_profile);
         recycler_friends_profile.setHasFixedSize(true);
-        layoutManager = new LinearLayoutManager(getContext());
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext());
         recycler_friends_profile.setLayoutManager(layoutManager);
 
         friends = new ArrayList<>();
@@ -81,10 +79,10 @@ public class ProfileFragment extends Fragment {
                 try {
                     Intent intent = new Intent(getActivity(), BluetoothActivity.class);
                     startActivity(intent);
-                    getActivity().overridePendingTransition(0,0);
+                    Objects.requireNonNull(getActivity()).overridePendingTransition(0,0);
 
                 } finally {
-                    getActivity().finish();
+                    Objects.requireNonNull(getActivity()).finish();
                 }
             }
         });
@@ -95,10 +93,10 @@ public class ProfileFragment extends Fragment {
                 try {
                     Intent intent = new Intent(getActivity(), RangListActivity.class);
                     startActivity(intent);
-                    getActivity().overridePendingTransition(0,0);
+                    Objects.requireNonNull(getActivity()).overridePendingTransition(0,0);
 
                 } finally {
-                    getActivity().finish();
+                    Objects.requireNonNull(getActivity()).finish();
                 }
             }
         });
@@ -130,7 +128,7 @@ public class ProfileFragment extends Fragment {
     private void getMyFriends() {
 
         FirebaseAuth auth = FirebaseAuth.getInstance();
-        String uuid = auth.getCurrentUser().getUid();
+        String uuid = Objects.requireNonNull(auth.getCurrentUser()).getUid();
 
         db = FirebaseFirestore.getInstance();
 
@@ -160,10 +158,10 @@ public class ProfileFragment extends Fragment {
                 @Override
                 public void onComplete(@NonNull Task<QuerySnapshot> task) {
                     if(task.isSuccessful()) {
-                        for(DocumentSnapshot documentSnapshot : task.getResult()) {
+                        for(DocumentSnapshot documentSnapshot : Objects.requireNonNull(task.getResult())) {
 
-                            Log.d("TAG SET UP FRIENDS", documentSnapshot.get("username").toString() + " " + documentSnapshot.get("team").toString());
-                            Users users = new Users((String) documentSnapshot.get("username").toString(), (String) documentSnapshot.get("team").toString(), (String) documentSnapshot.get("points").toString(), (String) documentSnapshot.get("image_url"));
+                            Log.d("TAG SET UP FRIENDS", Objects.requireNonNull(documentSnapshot.get("username")).toString() + " " + Objects.requireNonNull(documentSnapshot.get("team")).toString());
+                            Users users = new Users(Objects.requireNonNull(documentSnapshot.get("username")).toString(), Objects.requireNonNull(documentSnapshot.get("team")).toString(), Objects.requireNonNull(documentSnapshot.get("points")).toString(), Objects.requireNonNull(documentSnapshot.get("image_url")).toString());
                             friendsList.add(users);
                         }
 
@@ -191,14 +189,14 @@ public class ProfileFragment extends Fragment {
         Log.d("FRIENDS LIST", "THESE ARE YOUR FRIENDS: " + friendsList);
     }
 
-    protected void setUpInfo() {
-        txtUsername = (TextView) view.findViewById(R.id.txt_profile_username);
-        txtTeam = (TextView) view.findViewById(R.id.txt_profile_team);
-        imageView = (ImageView) view.findViewById(R.id.img_profile_icon);
+    private void setUpInfo() {
+        txtUsername = view.findViewById(R.id.txt_profile_username);
+        txtTeam =  view.findViewById(R.id.txt_profile_team);
+        imageView = view.findViewById(R.id.img_profile_icon);
 
         db = FirebaseFirestore.getInstance();
         user = FirebaseAuth.getInstance().getCurrentUser();
-        String uid = user.getUid();
+        assert user != null;
 
         db.collection("users").whereEqualTo("email", user.getEmail())
                 .get()
@@ -206,14 +204,14 @@ public class ProfileFragment extends Fragment {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if(task.isSuccessful()) {
-                            for(DocumentSnapshot documentSnapshot : task.getResult()) {
-                                if(documentSnapshot.get("image_url").toString().length() > 0)
-                                    pickedImage = Uri.parse(documentSnapshot.get("image_url").toString());
+                            for(DocumentSnapshot documentSnapshot : Objects.requireNonNull(task.getResult())) {
+                                if(Objects.requireNonNull(documentSnapshot.get("image_url")).toString().length() > 0)
+                                    pickedImage = Uri.parse(Objects.requireNonNull(documentSnapshot.get("image_url")).toString());
 
-                                Log.d("TAG", "onSuccess DOWNLOAD URL IS: " + documentSnapshot.get("image_url").toString());
-                                txtUsername.setText((CharSequence) documentSnapshot.get("username"));
-                                txtTeam.setText((CharSequence) documentSnapshot.get("team"));
-                                txtPoints.setText((CharSequence) documentSnapshot.get("points").toString());
+                                Log.d("TAG", "onSuccess DOWNLOAD URL IS: " + Objects.requireNonNull(documentSnapshot.get("image_url")).toString());
+                                txtUsername.setText(Objects.requireNonNull(documentSnapshot.get("username")).toString());
+                                txtTeam.setText(Objects.requireNonNull(documentSnapshot.get("team")).toString());
+                                txtPoints.setText(Objects.requireNonNull(documentSnapshot.get("points")).toString());
                                 Log.d("TAG", documentSnapshot.get("username") + " " + documentSnapshot.get("team") + " " + user);
                             }
                             if(pickedImage != null){
@@ -239,34 +237,33 @@ public class ProfileFragment extends Fragment {
     protected void setUpFont(){
 
         //region FontSetUp
-        Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "fonts/bebasneue.ttf");
-        txtUsername = (TextView) view.findViewById(R.id.txt_profile_username);
+        Typeface typeface = Typeface.createFromAsset(Objects.requireNonNull(getContext()).getAssets(), "fonts/bebasneue.ttf");
+        txtUsername = view.findViewById(R.id.txt_profile_username);
         txtUsername.setTypeface(typeface);
 
-        txtTeam = (TextView) view.findViewById(R.id.txt_profile_team);
+        txtTeam = view.findViewById(R.id.txt_profile_team);
         txtTeam.setTypeface(typeface);
 
-        txtPoints = (TextView) view.findViewById(R.id.txt_profile_points);
+        txtPoints =view.findViewById(R.id.txt_profile_points);
         txtPoints.setTypeface(typeface);
 
-        txt_addFriend_Profile = (TextView) view.findViewById(R.id.txt_addFriend_Profile);
-        txt_addFriend_Profile.setTypeface(typeface);
 
-        txt_profile_my_matches = (TextView) view.findViewById(R.id.txt_profile_my_matches);
+        TextView txt_profile_my_matches = view.findViewById(R.id.txt_profile_my_matches);
         txt_profile_my_matches.setTypeface(typeface);
 
-        txt_profile_my_friends = (TextView) view.findViewById(R.id.txt_profile_my_friends);
+        TextView txt_profile_my_friends = view.findViewById(R.id.txt_profile_my_friends);
         txt_profile_my_friends.setTypeface(typeface);
 
-        txt_RangList_Profile = (TextView) view.findViewById(R.id.txt_RangList_Profile);
-        txt_RangList_Profile.setTypeface(typeface);
+        TextView txt_Profile = view.findViewById(R.id.txt_Profile);
+        txt_Profile.setTypeface(typeface);
+
 
         Typeface typeface2 = Typeface.createFromAsset(getContext().getAssets(), "fonts/adventproregular.ttf");
 
-        txt_profile_my_friendsExp = (TextView) view.findViewById(R.id.txt_profile_my_friendsExp);
+        TextView txt_profile_my_friendsExp = view.findViewById(R.id.txt_profile_my_friendsExp);
         txt_profile_my_friendsExp.setTypeface(typeface2);
 
-        txt_profile_my_matchesExp = (TextView) view.findViewById(R.id.txt_profile_my_matchesExp);
+        TextView txt_profile_my_matchesExp = view.findViewById(R.id.txt_profile_my_matchesExp);
         txt_profile_my_matchesExp.setTypeface(typeface2);
         //endregion
     }
