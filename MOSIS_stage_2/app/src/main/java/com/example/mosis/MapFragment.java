@@ -1,10 +1,17 @@
 package com.example.mosis;
 
 import android.Manifest;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationManager;
+import android.net.Uri;
+import android.nfc.Tag;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -13,6 +20,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,9 +36,11 @@ import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
@@ -38,11 +48,14 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.maps.android.clustering.ClusterManager;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Objects;
+
+import static androidx.core.content.ContextCompat.getSystemService;
 
 
 /**
@@ -53,11 +66,17 @@ public class MapFragment extends Fragment {
     private View view;
     private GoogleMap googleMap;
     private MapView mapView;
+    private LatLngBounds mapBoundary;
+    private UserLocation userLocation;
+    private UserLocation userPosition;
     private ArrayList<UserModel> userList = new ArrayList<>();
     //private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private UserLocation userLocation;
+    private ClusterManager<ClusterMarker> mClusterManager;
+    private MyClusterManagerRenderer mClusterManagerRenderer;
+    private ArrayList<ClusterMarker> mClusterMarkers = new ArrayList<>();
+
     FirebaseFirestore db;
 
     private ArrayList<UserLocation> userLocations = new ArrayList<>();
@@ -73,7 +92,7 @@ public class MapFragment extends Fragment {
 
         db = FirebaseFirestore.getInstance();
 
-        if(checkLocationPermission()) {
+        if (checkLocationPermission()) {
             mapView = (MapView) view.findViewById(R.id.mapView);
             mapView.onCreate(savedInstanceState);
 
@@ -87,13 +106,10 @@ public class MapFragment extends Fragment {
                 @Override
                 public void onMapReady(GoogleMap mMap) {
                     googleMap = mMap;
-                    googleMap.setMyLocationEnabled(true);
-                    //To add marker
-                    LatLng sydney = new LatLng(-34, 151);
-                    googleMap.addMarker(new MarkerOptions().position(sydney).title("Title").snippet("Marker Description"));
-                    // For zooming functionality
-                    CameraPosition cameraPosition = new CameraPosition.Builder().target(sydney).zoom(12).build();
-                    googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+                    setCameraView();
+                    addMapMarkers();
+                    startLocationService();
                 }
             });
         }
@@ -102,6 +118,235 @@ public class MapFragment extends Fragment {
 
         setUpFont();
         return view;
+    }
+
+    private void startLocationService(){
+        if(!isLocationServiceRunning()){
+            Intent serviceIntent = new Intent(getContext(), LocationService.class);
+//        this.startService(serviceIntent);
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
+
+                getContext().startForegroundService(serviceIntent);
+                setCameraView();
+                //addMapMarkers();
+            } else {
+                getContext().startService(serviceIntent);
+                setCameraView();
+                //addMapMarkers();
+            }
+        }
+    }
+
+    private boolean isLocationServiceRunning() {
+        ActivityManager manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)){
+            if("com.codingwithmitch.googledirectionstest.services.LocationService".equals(service.service.getClassName())) {
+                Log.d("TAG", "isLocationServiceRunning: location service is already running.");
+                return true;
+            }
+        }
+        Log.d("TAG", "isLocationServiceRunning: location service is not running.");
+        return false;
+    }
+
+    private Handler mHandler = new Handler();
+    private Runnable mRunnable;
+    private static final int LOCATION_UPDATE_INTERVAL = 3000;
+
+    private void startUserLocationsRunnable(){
+        Log.d("TAG", "startUserLocationsRunnable: starting runnable for retrieving updated locations.");
+        mHandler.postDelayed(mRunnable = new Runnable() {
+            @Override
+            public void run() {
+                retrieveUserLocations();
+                mHandler.postDelayed(mRunnable, LOCATION_UPDATE_INTERVAL);
+            }
+        }, LOCATION_UPDATE_INTERVAL);
+    }
+
+    private void stopLocationUpdates(){
+        mHandler.removeCallbacks(mRunnable);
+    }
+
+    private void retrieveUserLocations(){
+        Log.d("TAG", "retrieveUserLocations: retrieving location of all users in the chatroom.");
+
+        try{
+            for(final ClusterMarker clusterMarker: mClusterMarkers){
+
+                DocumentReference userLocationRef = FirebaseFirestore.getInstance()
+                        .collection("User Locations")
+                        .document(clusterMarker.getUser().getUser_Id());
+
+                userLocationRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if(task.isSuccessful()){
+
+                            final UserLocation updatedUserLocation = task.getResult().toObject(UserLocation.class);
+
+                            // update the location
+                            for (int i = 0; i < mClusterMarkers.size(); i++) {
+                                try {
+                                    if (mClusterMarkers.get(i).getUser().getUser_Id().equals(updatedUserLocation.getUser().getUser_Id())) {
+
+                                        LatLng updatedLatLng = new LatLng(
+                                                updatedUserLocation.getGeoPoint().getLatitude(),
+                                                updatedUserLocation.getGeoPoint().getLongitude()
+                                        );
+
+                                        mClusterMarkers.get(i).setPosition(updatedLatLng);
+                                        mClusterManagerRenderer.setUpdateMarker(mClusterMarkers.get(i));
+                                    }
+
+
+                                } catch (NullPointerException e) {
+                                    Log.e("TAG", "retrieveUserLocations: NullPointerException: " + e.getMessage());
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }catch (IllegalStateException e){
+            Log.e("TAG", "retrieveUserLocations: Fragment was destroyed during Firestore query. Ending query." + e.getMessage() );
+        }
+
+    }
+    private void addMapMarkers() {
+
+        if(googleMap != null){
+
+            Log.d("TAG: ADD MAP MARKERS", "USAO SAM U TELO FUNKCIJE");
+
+            if(mClusterManager == null){
+                mClusterManager = new ClusterManager<ClusterMarker>(getContext(), googleMap);
+
+                Log.d("129. TAG: ADD MAP MARKERS", "mClusterManager: " + mClusterManager.toString());
+            }
+            if(mClusterManagerRenderer == null){
+                mClusterManagerRenderer = new MyClusterManagerRenderer(
+                        getContext(), googleMap,
+                        mClusterManager
+                );
+                mClusterManager.setRenderer(mClusterManagerRenderer);
+
+                Log.d("138. TAG: ADD MAP MARKERS", "mClusterManagerRenderer: " + mClusterManagerRenderer.toString());
+            }
+
+            //userLocations()
+            db = FirebaseFirestore.getInstance();
+
+            db.collection("User Locations").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    if(task.isSuccessful()) {
+                        for(DocumentSnapshot documentSnapshot : task.getResult()) {
+
+                            userLocations.add(documentSnapshot.toObject(UserLocation.class));
+                            Log.d("TAG: ADD MAP MARKERS", "userLocations " + userLocations);
+                        }
+
+                        for(UserLocation userLocation: userLocations) {
+
+                            Log.d("TAG", "addMapMarkers: location: " + userLocation.getGeoPoint().toString());
+                            try{
+                                String snippet = "";
+                                if(userLocation.getUser().getUser_Id().equals(FirebaseAuth.getInstance().getUid())){
+                                    snippet = "This is you: ";
+                                }
+                                else{
+                                    snippet = "This is your friend: ";
+                                }
+
+                                Uri avatar = Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_profile%2Fclipart-profile-4.jpg?alt=media&token=386ddecc-8dd1-41f0-be8b-adf66d235525"); // set the default avatar
+
+                                try{
+                                    if(userLocation.getUser().getImage_url().length() > 0) {
+                                        avatar = Uri.parse(userLocation.getUser().getImage_url());
+                                        Log.d("171. AVATAR", "addMapMarkers: avatar  " + avatar);
+                                    }
+
+                                }catch (NumberFormatException e){
+                                    Log.d("TAG", "addMapMarkers: no avatar for " + userLocation.getUser().getUsername() + ", setting default.");
+                                }
+
+                                Log.d("TAG", "addMapMarkers: no avatar for " + userLocation.getUser().getUsername() + ", setting default.");
+                                ClusterMarker newClusterMarker = new ClusterMarker(
+                                        new LatLng(userLocation.getGeoPoint().getLatitude(), userLocation.getGeoPoint().getLongitude()),
+                                        userLocation.getUser().getUsername(),
+                                        snippet,
+                                        avatar,
+                                        userLocation.getUser()
+                                );
+
+                                //mClusterManagerRenderer.onBeforeClusterItemRendered(newClusterMarker, );
+
+                                Log.d("185 TAG", "addMapMarkers: mClusterMarkers " + newClusterMarker);
+                                mClusterManager.addItem(newClusterMarker);
+                                mClusterMarkers.add(newClusterMarker);
+
+                            } catch (NullPointerException e){
+                                Log.e("TAG", "addMapMarkers: NullPointerException: " + e.getMessage() );
+                            }
+                        }
+                        mClusterManager.cluster();
+
+                        setCameraView();
+                    }
+                }
+            });
+            //userLocations()
+
+            Log.d("159. TAG: ADD MAP MARKERS", "userLocations " + userLocations);
+        } else {
+
+        }
+    }
+
+    private void setCameraView() {
+
+        Log.d("TAG setCameraView: ", "CALLED");
+
+        if (userPosition == null) {
+            userPosition = new UserLocation();
+
+            DocumentReference locationRef = db.collection("User Locations").document(FirebaseAuth.getInstance().getUid());
+
+            Log.d("TAG setCameraView: ", locationRef.toString());
+
+            locationRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        if (task.getResult().toObject(UserLocation.class) != null) {
+                            userPosition = task.getResult().toObject(UserLocation.class);
+                            Log.d("TAG USER LOCATIONS setCameraView:", userPosition.toString());
+                        }
+                        LocationManager locationManager = (LocationManager) getContext().getSystemService(getContext().LOCATION_SERVICE);
+                        Criteria criteria = new Criteria();
+                        String provider = locationManager.getBestProvider(criteria, true);
+                        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                            return;
+                        }
+                        Location location = locationManager.getLastKnownLocation(provider);
+
+                        if (location != null) {
+
+                            LatLng target = new LatLng(location.getLatitude(), location.getLongitude());
+                            CameraPosition position = googleMap.getCameraPosition();
+
+                            CameraPosition.Builder builder = new CameraPosition.Builder();
+                            builder.zoom(15);
+                            builder.target(target);
+
+                            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(builder.build()));
+                        }
+                    }
+                }
+            });
+        }
     }
 
     private void getUserLocation(UserModel userModel) {
@@ -119,7 +364,6 @@ public class MapFragment extends Fragment {
                 }
             }
         });
-
     }
 
     private void showData() {
@@ -135,12 +379,20 @@ public class MapFragment extends Fragment {
                         //Log.d("TAG", documentSnapshot.get("username").toString() + " " + documentSnapshot.get("team").toString());
                         UserModel user = documentSnapshot.toObject(UserModel.class);
                         Log.d("TAG SHOW DATA", user.toString());
-                        getUserLocation(user);
+                        //getUserLocation(user);
                         userList.add(user);
                     }
                 }
             }
         });
+    }
+
+    private void setUsersOnMap() {
+
+        //get all existing users
+
+
+
     }
 
     private void getUserData() {
@@ -165,7 +417,6 @@ public class MapFragment extends Fragment {
                     e.getStackTrace();
                 }
             });
-
         }
     }
 
@@ -220,7 +471,6 @@ public class MapFragment extends Fragment {
             }
         });
     }
-
 
     private boolean checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(Objects.requireNonNull(getContext()),
@@ -291,10 +541,9 @@ public class MapFragment extends Fragment {
 
             if(checkLocationPermission()) {
                 mapView.onResume();
-                //getLastKnownLocation();
                 getUserData();
-                showData();
-
+                startUserLocationsRunnable();
+//                showData();
             }
         }
     }
@@ -318,6 +567,7 @@ public class MapFragment extends Fragment {
                 == PackageManager.PERMISSION_GRANTED) {
 
             mapView.onDestroy();
+            stopLocationUpdates();
         }
 
 
@@ -333,17 +583,6 @@ public class MapFragment extends Fragment {
         }
 
     }
-
-//    @Override
-//    public void onMapReady(GoogleMap googleMap) {
-//        google_map = googleMap;
-//
-//        //43°19'19.0"N 21°54'16.4"E
-//        LatLng MyLocation = new LatLng(43.321951, 21.904550);
-//        google_map.addMarker(new MarkerOptions().position(MyLocation).title("Лука Јеж"));
-//        google_map.moveCamera(CameraUpdateFactory.newLatLng(MyLocation));
-//    }
-
 
     private void setUpFont() {
         Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "fonts/bebasneue.ttf");
