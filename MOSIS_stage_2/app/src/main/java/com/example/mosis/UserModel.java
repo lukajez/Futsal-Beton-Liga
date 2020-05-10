@@ -10,26 +10,20 @@ public class UserModel {
     private int points;
     private String team;
     private ArrayList<String> friends = new ArrayList<>();
+    private ArrayList<MatchModel> matches = new ArrayList<>();
     private String image_url;
 
     public UserModel(){}
 
-    public UserModel(String user_Id, String email, String username, int points, String team, ArrayList<String> friends, String image_url) {
-        this.user_id = user_Id;
+    public UserModel(String user_id, String email, String username, int points, String team, ArrayList<String> friends, ArrayList<MatchModel> matches, String image_url) {
+        this.user_id = user_id;
         this.email = email;
         this.username = username;
         this.points = points;
         this.team = team;
         this.friends = friends;
+        this.matches = matches;
         this.image_url = image_url;
-    }
-
-    public String getUser_Id() {
-        return user_id;
-    }
-
-    public void setUser_Id(String user_Id) {
-        this.user_id = user_Id;
     }
 
     public String getEmail() {
@@ -78,5 +72,22 @@ public class UserModel {
 
     public void setImage_url(String image_url) {
         this.image_url = image_url;
+    }
+
+
+    public String getUser_id() {
+        return user_id;
+    }
+
+    public void setUser_id(String user_id) {
+        this.user_id = user_id;
+    }
+
+    public ArrayList<MatchModel> getMatches() {
+        return matches;
+    }
+
+    public void setMatches(ArrayList<MatchModel> matches) {
+        this.matches = matches;
     }
 }

@@ -13,6 +13,16 @@
         android:padding="15dp"
         android:background="@drawable/menu_shape">
 
+        <ImageButton
+            android:id="@+id/btnSearchMatchOnMap"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:textSize="18sp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/ic_search"
+            />
+
         <TextView
             android:id="@+id/txt_Map"
             android:layout_width="wrap_content"
@@ -21,6 +31,16 @@
             android:textColor="#fff"
             android:textSize="15pt"
             android:layout_centerInParent="true"
+            />
+
+        <ImageButton
+            android:id="@+id/btnAddMatchOnMap"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:textSize="18sp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/ic_add"
             />
     </RelativeLayout>
 

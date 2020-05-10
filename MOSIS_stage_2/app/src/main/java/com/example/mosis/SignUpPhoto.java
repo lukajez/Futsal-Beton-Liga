@@ -38,6 +38,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -109,6 +110,7 @@ public class SignUpPhoto extends AppCompatActivity {
 
                 DocumentReference documentReference = fStore.collection("users").document(userID);
                 ArrayList<String> friends = new ArrayList<>();
+                ArrayList<MatchModel> matches = new ArrayList<>();
 
                 Map<String, Object> user = new HashMap<>();
                 user.put("user_id", userID);
@@ -122,6 +124,7 @@ public class SignUpPhoto extends AppCompatActivity {
                 else user.put("image_url", "");
 
                 user.put("friends", friends);
+                user.put("matches", matches);
 
                 documentReference.set(user).addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override

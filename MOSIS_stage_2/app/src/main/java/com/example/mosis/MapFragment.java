@@ -25,8 +25,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.google.android.gms.common.util.ArrayUtils;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -70,12 +72,17 @@ public class MapFragment extends Fragment {
     private UserLocation userLocation;
     private UserLocation userPosition;
     private ArrayList<UserModel> userList = new ArrayList<>();
+    private ArrayList<MatchModel> myMatchModels = new ArrayList<>();
+    private ArrayList<MatchModel> allMatchModels = new ArrayList<>();
+    private UserModel userModel;
+
     //private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private ClusterManager<ClusterMarker> mClusterManager;
     private MyClusterManagerRenderer mClusterManagerRenderer;
     private ArrayList<ClusterMarker> mClusterMarkers = new ArrayList<>();
+    ImageButton btnAddMatchOnMap;
 
     FirebaseFirestore db;
 
@@ -91,6 +98,7 @@ public class MapFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_map, container, false);
 
         db = FirebaseFirestore.getInstance();
+        btnAddMatchOnMap = view.findViewById(R.id.btnAddMatchOnMap);
 
         if (checkLocationPermission()) {
             mapView = (MapView) view.findViewById(R.id.mapView);
@@ -116,8 +124,78 @@ public class MapFragment extends Fragment {
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(Objects.requireNonNull(getContext()));
 
+
+        btnAddMatchOnMap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), AddMatchActivity.class);
+                startActivity(intent);
+                getActivity().overridePendingTransition(0, 0);
+            }
+        });
+
+        //get My matches
+        setAllMatches();
+
+        //get All matches (mine and my friends)
+
+
+
         setUpFont();
         return view;
+    }
+
+    private void setAllMatches() {
+
+        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
+
+        firebaseFirestore.collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if(task.isSuccessful()) {
+
+                    userModel = task.getResult().toObject(UserModel.class);
+
+                    myMatchModels = userModel.getMatches();
+
+                    Log.d("TAG", "myMatchModels: " + myMatchModels);
+                    setAllMatchModelss(userModel);
+
+                }
+            }
+        });
+
+    }
+
+    private void setAllMatchModelss(UserModel userModel) {
+        FirebaseFirestore mdb = FirebaseFirestore.getInstance();
+
+        for(String friend : userModel.getFriends()) {
+
+            if(friend != null) {
+                mdb.collection("users").document(friend).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+
+                        if(task.isSuccessful()) {
+
+                            UserModel userModel = task.getResult().toObject(UserModel.class);
+
+                            allMatchModels.addAll(userModel.getMatches());
+
+                            Log.d("168: TAG", "allMatchModels: " + allMatchModels);
+                        }
+                    }
+                });
+
+
+            }
+
+        }
+
+        allMatchModels.addAll(myMatchModels);
+        Log.d("168: TAG", "allMatchModels: " + allMatchModels);
     }
 
     private void startLocationService(){
@@ -177,7 +255,7 @@ public class MapFragment extends Fragment {
 
                 DocumentReference userLocationRef = FirebaseFirestore.getInstance()
                         .collection("User Locations")
-                        .document(clusterMarker.getUser().getUser_Id());
+                        .document(clusterMarker.getUser().getUser_id());
 
                 userLocationRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
@@ -189,7 +267,7 @@ public class MapFragment extends Fragment {
                             // update the location
                             for (int i = 0; i < mClusterMarkers.size(); i++) {
                                 try {
-                                    if (mClusterMarkers.get(i).getUser().getUser_Id().equals(updatedUserLocation.getUser().getUser_Id())) {
+                                    if (mClusterMarkers.get(i).getUser().getUser_id().equals(updatedUserLocation.getUser().getUser_id())) {
 
                                         LatLng updatedLatLng = new LatLng(
                                                 updatedUserLocation.getGeoPoint().getLatitude(),
@@ -214,6 +292,7 @@ public class MapFragment extends Fragment {
         }
 
     }
+
     private void addMapMarkers() {
 
         if(googleMap != null){
@@ -253,7 +332,7 @@ public class MapFragment extends Fragment {
                             Log.d("TAG", "addMapMarkers: location: " + userLocation.getGeoPoint().toString());
                             try{
                                 String snippet = "";
-                                if(userLocation.getUser().getUser_Id().equals(FirebaseAuth.getInstance().getUid())){
+                                if(userLocation.getUser().getUser_id().equals(FirebaseAuth.getInstance().getUid())){
                                     snippet = "This is you: ";
                                 }
                                 else{
@@ -305,6 +384,8 @@ public class MapFragment extends Fragment {
         }
     }
 
+    //region FUNCTIONS FOR USER LOCATION, CAMERA...
+
     private void setCameraView() {
 
         Log.d("TAG setCameraView: ", "CALLED");
@@ -349,52 +430,6 @@ public class MapFragment extends Fragment {
         }
     }
 
-    private void getUserLocation(UserModel userModel) {
-
-        DocumentReference locationRef = db.collection("User Locations").document(userModel.getUser_Id());
-
-        locationRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if(task.isSuccessful()) {
-                    if(task.getResult().toObject(UserLocation.class) != null) {
-                        userLocations.add(task.getResult().toObject(UserLocation.class));
-                        Log.d("TAG USER LOCATIONS getUserLocation:", task.getResult().toObject(UserLocation.class).toString());
-                    }
-                }
-            }
-        });
-    }
-
-    private void showData() {
-        db = FirebaseFirestore.getInstance();
-
-        db.collection("users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if(task.isSuccessful()) {
-
-                    for(DocumentSnapshot documentSnapshot : task.getResult()) {
-
-                        //Log.d("TAG", documentSnapshot.get("username").toString() + " " + documentSnapshot.get("team").toString());
-                        UserModel user = documentSnapshot.toObject(UserModel.class);
-                        Log.d("TAG SHOW DATA", user.toString());
-                        //getUserLocation(user);
-                        userList.add(user);
-                    }
-                }
-            }
-        });
-    }
-
-    private void setUsersOnMap() {
-
-        //get all existing users
-
-
-
-    }
-
     private void getUserData() {
         if(userLocation == null) {
             userLocation = new UserLocation();
@@ -410,6 +445,7 @@ public class MapFragment extends Fragment {
                     userLocation.setUser(user);
                     ((UserAuth)(getActivity().getApplicationContext())).setUser(user);
                     getLastKnownLocation();
+
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
@@ -531,6 +567,9 @@ public class MapFragment extends Fragment {
         }
     }
 
+    //endregion
+
+    //region STATES
     @Override
     public void onResume() {
         super.onResume();
@@ -543,7 +582,6 @@ public class MapFragment extends Fragment {
                 mapView.onResume();
                 getUserData();
                 startUserLocationsRunnable();
-//                showData();
             }
         }
     }
@@ -584,10 +622,62 @@ public class MapFragment extends Fragment {
 
     }
 
+    //endregion
+    
     private void setUpFont() {
         Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "fonts/bebasneue.ttf");
         TextView txt_Map = (TextView) view.findViewById(R.id.txt_Map);
         txt_Map.setTypeface(typeface);
+    }
+
+
+
+
+
+    private void getUserLocation(UserModel userModel) {
+
+        DocumentReference locationRef = db.collection("User Locations").document(userModel.getUser_id());
+
+        locationRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if(task.isSuccessful()) {
+                    if(task.getResult().toObject(UserLocation.class) != null) {
+                        userLocations.add(task.getResult().toObject(UserLocation.class));
+                        Log.d("TAG USER LOCATIONS getUserLocation:", task.getResult().toObject(UserLocation.class).toString());
+                    }
+                }
+            }
+        });
+    }
+
+    private void showData() {
+        db = FirebaseFirestore.getInstance();
+
+        db.collection("users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if(task.isSuccessful()) {
+
+                    for(DocumentSnapshot documentSnapshot : task.getResult()) {
+
+                        //Log.d("TAG", documentSnapshot.get("username").toString() + " " + documentSnapshot.get("team").toString());
+                        UserModel user = documentSnapshot.toObject(UserModel.class);
+                        Log.d("TAG SHOW DATA", user.toString());
+                        //getUserLocation(user);
+                        userList.add(user);
+                    }
+                }
+            }
+        });
+    }
+
+    private void setUsersOnMap() {
+
+        //get all existing users
+
+
+
     }
 
 }
