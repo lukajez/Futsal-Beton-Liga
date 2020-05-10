@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.os.Handler;
+import android.service.autofill.FieldClassification;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -54,6 +55,7 @@ import com.google.maps.android.clustering.ClusterManager;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -139,11 +141,69 @@ public class MapFragment extends Fragment {
 
         //get All matches (mine and my friends)
 
-
+        getMatches();
 
         setUpFont();
         return view;
     }
+
+    private ArrayList<String> meAndFriends = new ArrayList<>();
+
+    private void getMatches() {
+
+        meAndFriends.add(FirebaseAuth.getInstance().getCurrentUser().getUid());
+
+        FirebaseFirestore myDb = FirebaseFirestore.getInstance();
+        myDb.collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if(task.isSuccessful()) {
+
+                    UserModel user = task.getResult().toObject(UserModel.class);
+
+                    meAndFriends.addAll(user.getFriends());
+
+                    getAllMatches(meAndFriends);
+                }
+            }
+        });
+    }
+
+    private ArrayList<MatchModel> matchModels = new ArrayList<>();
+    private ArrayList<MatchModel> _allMatchModels = new ArrayList<>();
+
+    private void getAllMatches(final ArrayList<String> meAndFriends) {
+
+        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
+
+        firebaseFirestore.collection("Matches").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+
+                if(task.isSuccessful()) {
+                    for(DocumentSnapshot documentSnapshot : task.getResult()) {
+                        MatchModel matchModel = documentSnapshot.toObject(MatchModel.class);
+                        matchModels.add(matchModel);
+                    }
+
+                    for(String user : meAndFriends) {
+
+                        for(MatchModel matchModel : matchModels) {
+
+                            if(matchModel.getCreator().getUser_id() == user)
+                                _allMatchModels.add(matchModel);
+
+                            Log.d("203. TAG _allMatchModels: ", "matchModel: " + matchModel);
+                        }
+                    }
+                }
+            }
+        });
+
+
+        Log.d("203. TAG _allMatchModels: ", "_allMatchModels " + _allMatchModels);
+    }
+
 
     private void setAllMatches() {
 
@@ -158,16 +218,15 @@ public class MapFragment extends Fragment {
 
                     myMatchModels = userModel.getMatches();
 
-                    Log.d("TAG", "myMatchModels: " + myMatchModels);
+                    Log.d("161: TAG", "myMatchModels: " + myMatchModels);
                     setAllMatchModelss(userModel);
-
                 }
             }
         });
-
     }
 
     private void setAllMatchModelss(UserModel userModel) {
+
         FirebaseFirestore mdb = FirebaseFirestore.getInstance();
 
         for(String friend : userModel.getFriends()) {
@@ -482,8 +541,6 @@ public class MapFragment extends Fragment {
     private void getLastKnownLocation() {
         Log.d("LAST KNOWN LOCATION", "getLastKnownLocation: called.");
 
-//        if(ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-
         fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
             @Override
             public void onComplete(@NonNull Task<Location> task) {
@@ -623,15 +680,12 @@ public class MapFragment extends Fragment {
     }
 
     //endregion
-    
+
     private void setUpFont() {
         Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "fonts/bebasneue.ttf");
         TextView txt_Map = (TextView) view.findViewById(R.id.txt_Map);
         txt_Map.setTypeface(typeface);
     }
-
-
-
 
 
     private void getUserLocation(UserModel userModel) {

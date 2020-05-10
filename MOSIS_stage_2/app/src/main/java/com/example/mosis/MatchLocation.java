@@ -19,6 +19,12 @@ public class MatchLocation {
 
     public MatchLocation() {}
 
+    public MatchLocation(GeoPoint geoPoint, Date timestamp, MatchModel match) {
+        this.geoPoint = geoPoint;
+        this.timestamp = timestamp;
+        this.match = match;
+    }
+
     public MatchLocation(GeoPoint geoPoint, Date timestamp, MatchModel match, UserModel userModel) {
         this.geoPoint = geoPoint;
         this.timestamp = timestamp;

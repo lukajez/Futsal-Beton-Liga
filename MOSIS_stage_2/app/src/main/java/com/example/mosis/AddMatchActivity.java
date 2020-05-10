@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.location.Location;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -23,6 +24,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -32,6 +35,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.gson.internal.bind.ReflectiveTypeAdapterFactory;
 
@@ -57,8 +61,10 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
     private FirebaseStorage storage;
 
     private MatchLocation matchLocation;
-    private MatchModel matchModel = null;
+    private MatchModel matchModel;
     private UserModel userModel;
+
+    private FusedLocationProviderClient fusedLocationProviderClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +74,8 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
         txtDateAddMatch = (TextView) findViewById(R.id.txt_Date_AddMatch);
         etxt_Name_AddMatch = findViewById(R.id.etxt_Name_AddMatch);
         btn_Confirm_AddMatch = findViewById(R.id.btn_Confirm_AddMatch);
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(Objects.requireNonNull(getApplicationContext()));
 
         etxt_Name_AddMatch.addTextChangedListener(new TextWatcher() {
             @Override
@@ -186,6 +194,7 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
 
         db = FirebaseFirestore.getInstance();
 
+
         if(matchModel == null) {
 
             matchModel = new MatchModel();
@@ -202,6 +211,7 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
                         matchModel.setDate(date);
 
                         setMatchInFirestore();
+
                         //updateUserInFirestore();
                     }
                 }
@@ -222,7 +232,7 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
                 try {
                     Intent intent = new Intent(AddMatchActivity.this, HomeActivity.class);
                     startActivity(intent);
-                    overridePendingTransition(0, 0);
+                    //overridePendingTransition(0, 0);
 
                 } finally {
                     finish();
@@ -244,6 +254,7 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
                 @Override
                 public void onSuccess(Void aVoid) {
                     Log.d("246: TAG:", "updateMatchInFirebase: done");
+                    getMatchLocation();
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
@@ -254,39 +265,45 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
         }
     }
 
-    private void updateUserInFirestore() {
-
-        if(matchModel != null) {
-            db = FirebaseFirestore.getInstance();
-            db.collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).update("matches", FieldValue.arrayUnion(matchModel)).addOnSuccessListener(new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void aVoid) {
-                    Toast.makeText(getApplicationContext(), "Match added..", Toast.LENGTH_SHORT).show();
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    e.getStackTrace();
-                }
-            });
-        }
-    }
+    private void setMatchLocationInFirebase(final MatchModel matchModel) {
 
 
-
-
-
-    private void getUserForMatch() {
+        //matchLocation.setMatch(matchModel);
 
         db = FirebaseFirestore.getInstance();
 
-        db.collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+        db.collection("Match Locations").document(matchModel.getId()).set(matchModel).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+            public void onComplete(@NonNull Task<Void> task) {
                 if(task.isSuccessful()) {
-                    UserModel user = Objects.requireNonNull(task.getResult()).toObject(UserModel.class);
-//                    matchLocation.setUserModel(user);
-//                    saveMatchLocation();
+                    Log.d("268..........TAG", "savedMatchLocation: \ninserted match location into database." + "\n latitude: " + matchLocation.getGeoPoint().getLatitude()+"\n longitude: " + matchLocation.getGeoPoint().getLatitude());
+                }
+            }
+        });
+    }
+
+    private void getMatchLocation() {
+
+        if(matchLocation == null)
+            matchLocation = new MatchLocation();
+
+        fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
+            @Override
+            public void onComplete(@NonNull Task<Location> task) {
+                if(task.isSuccessful()) {
+
+                    Location location = task.getResult();
+                    assert location != null;
+                    GeoPoint geoPoint = new GeoPoint(location.getLatitude(), location.getLongitude());
+
+                    Log.d("299: TAG:", "onComplete: latitude: " + geoPoint.getLatitude());
+                    Log.d("300: TAG:", "onComplete: longitude: " + geoPoint.getLongitude());
+
+                    matchLocation.setGeoPoint(geoPoint);
+                    matchLocation.setTimestamp(null);
+                    matchLocation.setMatch(matchModel);
+
+                    saveMatchLocation();
                 }
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -299,18 +316,44 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
 
     private void saveMatchLocation() {
 
-        db = FirebaseFirestore.getInstance();
+
+
+        Log.d("321: TAG:", "onComplete: latitude: " + matchLocation + " matchModel.getId(): " + matchModel.getId());
 
         if(matchLocation != null){
 
-            DocumentReference locationRef = db.collection("Match Locations").document(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()));
+            Log.d("325: TAG:", "onComplete: latitude: " + matchLocation + " matchModel.getId(): " + matchModel.getId());
 
-            locationRef.set(matchLocation).addOnCompleteListener(new OnCompleteListener<Void>() {
+            db = FirebaseFirestore.getInstance();
+
+            db.collection("Match Locations").document(matchModel.getId()).set(matchLocation).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
                     if(task.isSuccessful()) {
-                        Log.d("TAG", "savedMatchLocation: \ninserted match location into database." + "\n latitude: " + matchLocation.getGeoPoint().getLatitude()+"\n longitude: " + matchLocation.getGeoPoint().getLatitude());
+                        Log.d("330 TAG", "savedUserLocation: \ninsered user location into database." + "\n latitude: " + matchLocation.getGeoPoint().getLatitude()+"\n longitude: " + matchLocation.getGeoPoint().getLatitude());
+                    } else {
+                        Log.d("333 TAG", "savedUserLocation: \ninsered user location into database." + "\n latitude: " + matchLocation.getGeoPoint().getLatitude()+"\n longitude: " + matchLocation.getGeoPoint().getLatitude());
                     }
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    e.getStackTrace();
+                }
+            });
+        } else {
+            Log.d("IZ NEKOG RAZLOGA NECE MAJKU TI JEBEM U PICKU", "PrOCITAJ OVO PRVO");
+        }
+    }
+
+    private void updateUserInFirestore() {
+
+        if(matchModel != null) {
+            db = FirebaseFirestore.getInstance();
+            db.collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).update("matches", FieldValue.arrayUnion(matchModel)).addOnSuccessListener(new OnSuccessListener<Void>() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    Toast.makeText(getApplicationContext(), "Match added..", Toast.LENGTH_SHORT).show();
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
