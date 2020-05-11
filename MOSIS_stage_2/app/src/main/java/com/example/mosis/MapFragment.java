@@ -474,14 +474,11 @@ public class MapFragment extends Fragment {
                 public void onComplete(@NonNull Task<QuerySnapshot> task) {
                     if(task.isSuccessful()) {
                         for(DocumentSnapshot documentSnapshot : task.getResult()) {
-                            
                             matchLocations.add(documentSnapshot.toObject(MatchLocation.class));
-                            Log.d("TAG: ADD MAP MARKERS", "userLocations " + matchLocations);
                         }
 
                         for(MatchLocation matchLocation: matchLocations) {
 
-                            Log.d("TAG", "addMapMarkers: location: " + matchLocation.getGeoPoint().toString());
                             try{
                                 String snippet = "";
                                 if(matchLocation.getMatch().getCreator().getUser_id().equals(FirebaseAuth.getInstance().getUid())){
@@ -494,16 +491,12 @@ public class MapFragment extends Fragment {
                                 Uri avatar = Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_match%2Fstreetfut.jpg?alt=media&token=c5c0b31a-21b1-492c-911a-cb5cc4b81e8a"); // set the default avatar
 
                                 try{
-                                    if(matchLocation.getMatch().getImage_url().length() > 0) {
+                                    if(matchLocation.getMatch().getImage_url().length() > 0)
                                         avatar = Uri.parse(matchLocation.getMatch().getImage_url());
-                                        Log.d("171. AVATAR", "addMapMarkers: avatar  " + avatar);
-                                    }
 
-                                }catch (NumberFormatException e){
+                                } catch (NumberFormatException e){
                                     Log.d("TAG", "addMapMarkers: no avatar for " + matchLocation.getMatch().getCreator().getUsername() + ", setting default.");
                                 }
-
-                                Log.d("TAG", "addMapMarkers: no avatar for " + matchLocation.getMatch().getCreator().getUsername() + ", setting default.");
 
                                 ClusterMatchMarker newClusterMarker = new ClusterMatchMarker(
                                         new LatLng(matchLocation.getGeoPoint().getLatitude(), matchLocation.getGeoPoint().getLongitude()),
@@ -513,9 +506,6 @@ public class MapFragment extends Fragment {
                                         matchLocation.getMatch()
                                 );
 
-                                //mClusterManagerRenderer.onBeforeClusterItemRendered(newClusterMarker, );
-
-                                Log.d("185 TAG", "addMapMarkers: mClusterMarkers " + newClusterMarker);
                                 mClusterMatchManager.addItem(newClusterMarker);
                                 mClusterMatchMarkers.add(newClusterMarker);
 
@@ -523,15 +513,34 @@ public class MapFragment extends Fragment {
                                 Log.e("TAG", "addMapMarkers: NullPointerException: " + e.getMessage() );
                             }
                         }
+
                         mClusterMatchManager.cluster();
 
-                        //setCameraView();
+                        mClusterMatchManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterMatchMarker>() {
+                            @Override
+                            public boolean onClusterItemClick(ClusterMatchMarker item) {
+
+                                Log.d("522 TAG", "Item: " + item.getTitle() + " /// " + item.getMatch().toString());
+
+                                try {
+
+                                    Intent intent = new Intent(getContext(), MatchActivity.class);
+                                    intent.putExtra("match_id", item.getMatch().getId());
+
+                                    startActivity(intent);
+                                    getActivity().overridePendingTransition(0,0);
+
+                                    return true;
+
+                                } catch (Exception e) {
+                                    return false;
+                                }
+                            }
+                        });
                     }
                 }
             });
-            //userLocations()
 
-            Log.d("159. TAG: ADD MAP MARKERS", "userLocations " + matchLocations);
         } else {
 
         }

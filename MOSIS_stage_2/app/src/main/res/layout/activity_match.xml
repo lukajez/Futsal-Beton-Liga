@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MatchActivity"
+    android:background="@color/colorBackground"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:id="@+id/lay_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:background="@drawable/menu_shape">
+
+        <Button
+            android:id="@+id/btn_Back_Match"
+            android:layout_width="16dp"
+            android:layout_height="35dp"
+            android:background="@drawable/ic_back_filled"
+            android:layout_centerVertical="true"
+            />
+
+        <TextView
+            android:id="@+id/txt_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MATCH"
+            android:textColor="#fff"
+            android:textSize="15pt"
+            android:layout_centerInParent="true"
+            />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="20dp">
+
+        <TextView
+            android:id="@+id/txt_Add_MatchInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MATCH INFO"
+            android:textColor="#fff"
+            android:textSize="20sp"
+            android:layout_centerInParent="true"
+            />
+
+        <TextView
+            android:id="@+id/txt_Add_MatchInfoExp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Basic information about match"
+            android:textColor="#fff"
+            android:textSize="15sp"
+            android:layout_centerInParent="true"
+            />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/img_Match_Image"
+            android:layout_width="match_parent"
+            android:layout_height="246dp"
+            android:background="@drawable/holder_image"/>
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp">
+
+        <TextView
+            android:id="@+id/txt_MatchNameHint_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Match Name: "
+            android:textColor="#fff"
+            android:textSize="18sp"
+           />
+
+        <TextView
+            android:id="@+id/txt_MatchNameInfo_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Match Name: "
+            android:textColor="#fff"
+            android:textSize="18sp"
+            android:layout_alignParentEnd="true"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp">
+
+        <TextView
+            android:id="@+id/txt_MatchCreatorHint_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Creator:"
+            android:textColor="#fff"
+            android:textSize="18sp"
+            />
+
+        <TextView
+            android:id="@+id/txt_MatchCreatorInfo_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Creator:"
+            android:textColor="#fff"
+            android:textSize="18sp"
+            android:layout_alignParentEnd="true"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp">
+
+        <TextView
+            android:id="@+id/txt_TypeHint_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Type:"
+            android:textColor="#fff"
+            android:textSize="18sp"
+            />
+
+        <TextView
+            android:id="@+id/txt_TypeInfo_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Type:"
+            android:textColor="#fff"
+            android:textSize="18sp"
+            android:layout_alignParentEnd="true"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp">
+
+        <TextView
+            android:id="@+id/txt_DateHint_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Date:"
+            android:textColor="#fff"
+            android:textSize="18sp"
+            />
+
+        <TextView
+            android:id="@+id/txt_DateInfo_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Date:"
+            android:textColor="#fff"
+            android:textSize="18sp"
+            android:layout_alignParentEnd="true"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp">
+
+        <TextView
+            android:id="@+id/txt_StatusHint_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status:"
+            android:textColor="#fff"
+            android:textSize="18sp"
+            />
+
+        <TextView
+            android:id="@+id/txt_StatusInfo_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status"
+            android:textColor="#fff"
+            android:textSize="18sp"
+            android:layout_alignParentEnd="true"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rel_Subscribe"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txt_SubHint_Match"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SUBSCRIPTION"
+                android:textColor="#fff"
+                android:textSize="20sp"
+                />
+
+            <TextView
+                android:id="@+id/txt_SubInfo_Match"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Subscribe to this match"
+                android:textColor="#fff"
+                android:textSize="15sp"
+                android:layout_centerInParent="true"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_Subscribe_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SUBSCRIBE"
+            android:textColor="@color/colorBackground"
+            android:layout_alignParentEnd="true"
+            android:background="#fff"/>
+    </RelativeLayout>
+
+
+
+
+</LinearLayout>
