@@ -2,4 +2,8 @@
 <resources>
     <dimen name="custom_marker_image">50dp</dimen>
     <dimen name="custom_marker_padding">2dp</dimen>
+
+    <dimen name="custom_match_marker_image_width">150dp</dimen>
+    <dimen name="custom_match_marker_image_height">100dp</dimen>
+    <dimen name="custom_match_marker_padding">2dp</dimen>
 </resources>

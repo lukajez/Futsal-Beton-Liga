@@ -81,9 +81,16 @@ public class MapFragment extends Fragment {
     //private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     private FusedLocationProviderClient fusedLocationProviderClient;
+
     private ClusterManager<ClusterMarker> mClusterManager;
+    private ClusterManager<ClusterMatchMarker> mClusterMatchManager;
+
     private MyClusterManagerRenderer mClusterManagerRenderer;
+    private MatchClusterManagerRenderer mClusterMatchManagerRenderer;
+
     private ArrayList<ClusterMarker> mClusterMarkers = new ArrayList<>();
+    private ArrayList<ClusterMatchMarker> mClusterMatchMarkers = new ArrayList<>();
+    private ArrayList<MatchLocation> matchLocations = new ArrayList<>();
     ImageButton btnAddMatchOnMap;
 
     FirebaseFirestore db;
@@ -119,6 +126,7 @@ public class MapFragment extends Fragment {
 
                     setCameraView();
                     addMapMarkers();
+                    addMatchMarkers();
                     startLocationService();
                 }
             });
@@ -203,7 +211,6 @@ public class MapFragment extends Fragment {
 
         Log.d("203. TAG _allMatchModels: ", "_allMatchModels " + _allMatchModels);
     }
-
 
     private void setAllMatches() {
 
@@ -443,6 +450,92 @@ public class MapFragment extends Fragment {
         }
     }
 
+    private void addMatchMarkers() {
+
+        if(googleMap != null){
+
+            if(mClusterMatchManager == null){
+                mClusterMatchManager = new ClusterManager<ClusterMatchMarker>(getContext(), googleMap);
+
+            }
+            if(mClusterMatchManagerRenderer == null){
+                mClusterMatchManagerRenderer = new MatchClusterManagerRenderer(
+                        getContext(), googleMap,
+                        mClusterMatchManager
+                );
+                mClusterMatchManager.setRenderer(mClusterMatchManagerRenderer);
+            }
+
+            //userLocations()
+            db = FirebaseFirestore.getInstance();
+
+            db.collection("Match Locations").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    if(task.isSuccessful()) {
+                        for(DocumentSnapshot documentSnapshot : task.getResult()) {
+                            
+                            matchLocations.add(documentSnapshot.toObject(MatchLocation.class));
+                            Log.d("TAG: ADD MAP MARKERS", "userLocations " + matchLocations);
+                        }
+
+                        for(MatchLocation matchLocation: matchLocations) {
+
+                            Log.d("TAG", "addMapMarkers: location: " + matchLocation.getGeoPoint().toString());
+                            try{
+                                String snippet = "";
+                                if(matchLocation.getMatch().getCreator().getUser_id().equals(FirebaseAuth.getInstance().getUid())){
+                                    snippet = "This is your match: ";
+                                }
+                                else{
+                                    snippet = "This is your friend's match: ";
+                                }
+
+                                Uri avatar = Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_match%2Fstreetfut.jpg?alt=media&token=c5c0b31a-21b1-492c-911a-cb5cc4b81e8a"); // set the default avatar
+
+                                try{
+                                    if(matchLocation.getMatch().getImage_url().length() > 0) {
+                                        avatar = Uri.parse(matchLocation.getMatch().getImage_url());
+                                        Log.d("171. AVATAR", "addMapMarkers: avatar  " + avatar);
+                                    }
+
+                                }catch (NumberFormatException e){
+                                    Log.d("TAG", "addMapMarkers: no avatar for " + matchLocation.getMatch().getCreator().getUsername() + ", setting default.");
+                                }
+
+                                Log.d("TAG", "addMapMarkers: no avatar for " + matchLocation.getMatch().getCreator().getUsername() + ", setting default.");
+
+                                ClusterMatchMarker newClusterMarker = new ClusterMatchMarker(
+                                        new LatLng(matchLocation.getGeoPoint().getLatitude(), matchLocation.getGeoPoint().getLongitude()),
+                                        matchLocation.getMatch().getName(),
+                                        snippet,
+                                        avatar,
+                                        matchLocation.getMatch()
+                                );
+
+                                //mClusterManagerRenderer.onBeforeClusterItemRendered(newClusterMarker, );
+
+                                Log.d("185 TAG", "addMapMarkers: mClusterMarkers " + newClusterMarker);
+                                mClusterMatchManager.addItem(newClusterMarker);
+                                mClusterMatchMarkers.add(newClusterMarker);
+
+                            } catch (NullPointerException e){
+                                Log.e("TAG", "addMapMarkers: NullPointerException: " + e.getMessage() );
+                            }
+                        }
+                        mClusterMatchManager.cluster();
+
+                        //setCameraView();
+                    }
+                }
+            });
+            //userLocations()
+
+            Log.d("159. TAG: ADD MAP MARKERS", "userLocations " + matchLocations);
+        } else {
+
+        }
+    }
     //region FUNCTIONS FOR USER LOCATION, CAMERA...
 
     private void setCameraView() {
@@ -680,7 +773,6 @@ public class MapFragment extends Fragment {
     }
 
     //endregion
-
     private void setUpFont() {
         Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "fonts/bebasneue.ttf");
         TextView txt_Map = (TextView) view.findViewById(R.id.txt_Map);
