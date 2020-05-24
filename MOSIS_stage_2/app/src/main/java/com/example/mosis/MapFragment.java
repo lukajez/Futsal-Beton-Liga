@@ -63,7 +63,10 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static androidx.core.content.ContextCompat.getSystemService;
 
@@ -422,22 +425,55 @@ public class MapFragment extends Fragment {
 
                 if(controlFilterTour)
                     helperTerm.add("Tournament");
+                else helperTerm.removeIf(term -> term.equals("Tournament"));
 
                 if(controlFilterCharTour)
                     helperTerm.add("Charity Tournament");
+                else helperTerm.removeIf(term -> term.equals("Charity Tournament"));
 
                 if(controlFilterFrTour)
                     helperTerm.add("Friendly Tournament");
+                else helperTerm.removeIf(term -> term.equals("Friendly Tournament"));
 
                 if(controlFilterSingle)
                     helperTerm.add("Single Match");
+                else helperTerm.removeIf(term -> term.equals("Single Match"));
+
+                Set<String> set = new LinkedHashSet<>(helperTerm);
+                helperTerm.clear();
+                helperTerm.addAll(set);
+
+                Log.d("442 TAG", "prevMatchLocations: " + prevMatchLocations);
+
+                helperMatchLocations.clear();
+
+                if(helperTerm.size() > 0) {
+
+                    Log.d("450 TAG", "prevMatchLocations: " + prevMatchLocations);
+
+                    for(String term : helperTerm) {
+
+                        Log.d("454 TAG", "term: " + term);
+                        prevMatchLocations.removeIf(matchLocation -> !matchLocation.getMatch().getType().equals(term));
+
+                        helperMatchLocations.addAll(prevMatchLocations);
+                        prevMatchLocations.clear();
+                        prevMatchLocations.addAll(defaultMatchLocations);
+
+                        Log.d("457 TAG", "prevMatchLocations: " + prevMatchLocations);
+                    }
 
 
+                    Log.d("461 TAG", "prevMatchLocations: " + prevMatchLocations);
 
-//                for(MatchLocation matchLocation : filteredMatchLocations) {
-//                    if(helperTerm.get)
-//                    helperTerm.add(matchLocation.getMatch().getType());
-//                }
+                    filteredMatchLocations.clear();
+                    filteredMatchLocations.addAll(helperMatchLocations);
+                }
+
+                Log.d("467 TAG", "helperTerm: " + helperTerm);
+
+                Log.d("469 TAG", "filteredMatchLocations: " + filteredMatchLocations);
+
             }
         }
 
@@ -514,6 +550,9 @@ public class MapFragment extends Fragment {
     }
 
     private ArrayList<MatchLocation> prevMatchLocations = new ArrayList<>();
+    private ArrayList<MatchLocation> defaultMatchLocations = new ArrayList<>();
+    private ArrayList<MatchLocation> helperMatchLocations = new ArrayList<>();
+
     private ArrayList<MatchLocation> filteredMatchLocations = new ArrayList<>();
 
     private void filterMatchesAndSearch(final String searchTerm, final String filterTerm, final String atribut) {
@@ -546,6 +585,9 @@ public class MapFragment extends Fragment {
                             MatchLocation _matchLocation = documentSnapshot.toObject(MatchLocation.class);
                             matchLocations.add(_matchLocation);
                         }
+
+                        defaultMatchLocations.clear();
+                        defaultMatchLocations.addAll(matchLocations);
 
                         if(searchTerm.length() > 0) {
 
@@ -591,7 +633,7 @@ public class MapFragment extends Fragment {
                                 }
                             }
                         }
-                        
+
                         else if (filterTerm.length() > 0) {
                             //TODO -- it has filter, filter matchLocations by that filter
 
