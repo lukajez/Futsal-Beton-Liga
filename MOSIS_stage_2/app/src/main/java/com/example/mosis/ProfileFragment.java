@@ -50,7 +50,9 @@ public class ProfileFragment extends Fragment {
     private FirebaseUser user;
     private ImageView imageView;
     private Uri pickedImage;
+
     private RecyclerView recycler_friends_profile;
+
     private CustomAdapter adapter;
     private ArrayList<String> friends;
     private ArrayList<User> friendsList;
@@ -106,24 +108,6 @@ public class ProfileFragment extends Fragment {
         this.setUpFont();
         return view;
     }
-//    public void handleImageClick(View view) {
-//
-//        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//        if(intent.resolveActivity(getContext().getPackageManager()) != null){
-//            startActivityForResult(intent, TAKE_IMAGE_CODE);
-//        }
-//    }
-//    @Override
-//    void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if(requestCode == TAKE_IMAGE_CODE) {
-//            switch (resultCode){
-//                case RESULT_OK:
-//                    Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-//                    handleUpload(bitmap);
-//            }
-//        }
-//    }
 
     private void getMyFriends() {
 

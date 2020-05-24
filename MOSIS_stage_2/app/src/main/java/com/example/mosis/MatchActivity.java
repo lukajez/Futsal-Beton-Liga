@@ -3,6 +3,7 @@ package com.example.mosis;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -13,18 +14,32 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.text.NumberFormat;
+import java.util.ArrayList;
 
 public class MatchActivity extends AppCompatActivity {
 
     String match_id;
     FirebaseFirestore db;
     MatchModel matchModel;
+    Button btn_Subscribe_Match;
+    private final int SUBSCRIPTION_POINTS = 2;
+    RelativeLayout rel_Subscribe;
+    private int SUBSCRIPTION_STATUS = -1;
+    Button btn_Update_Match;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,11 +58,126 @@ public class MatchActivity extends AppCompatActivity {
         } else {
             match_id = (String) savedInstanceState.getSerializable("match_id");
         }
+        //endregion
 
         if(match_id != null)
             setMatchInfo(match_id);
 
+        btn_Subscribe_Match = findViewById(R.id.btn_Subscribe_Match);
+        btn_Subscribe_Match.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                checkForSubAndSub(matchModel);
+            }
+        });
+
+        rel_Subscribe = findViewById(R.id.rel_Subscribe);
+        rel_Subscribe.setVisibility(View.GONE);
+
+        btn_Update_Match = findViewById(R.id.btn_Update_Match);
+
+        btn_Update_Match.setVisibility(View.GONE);
+
+        btn_Update_Match.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MatchActivity.this, UpdateMatchActivity.class);
+                intent.putExtra("match_id", matchModel.getId());
+                startActivity(intent);
+            }
+        });
+
         setUpFont();
+    }
+
+    private ArrayList<MatchModel> subscriptions = new ArrayList<>();
+
+    private void subscribeToMatch(final MatchModel matchModel) {
+
+        btn_Subscribe_Match = findViewById(R.id.btn_Subscribe_Match);
+
+        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
+        firebaseFirestore.collection("users").document(FirebaseAuth.getInstance().getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if(task.isSuccessful()) {
+
+                    UserModel userModel = task.getResult().toObject(UserModel.class);
+                    subscriptions = userModel.getSubscriptions();
+
+                    for(MatchModel matchModel1 : subscriptions) {
+                        if(matchModel1.getId().equals(matchModel.getId())) {
+                            btn_Subscribe_Match.setText("You're Subscribed");
+                            btn_Subscribe_Match.setEnabled(false);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private UserModel currUser;
+    private void checkForSubAndSub(final MatchModel matchModel) {
+
+        currUser = new UserModel();
+
+        db = FirebaseFirestore.getInstance();
+
+        //TODO -- Update partitipiants -- add AuthUser to that array
+        //db.collection("Matches").document(matchModel.getId()).update("partitipiants", FieldValue.arrayUnion())
+
+        DocumentReference documentReference = db.collection("users").document(FirebaseAuth.getInstance().getUid());
+
+        documentReference.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if(task.isSuccessful()) {
+                    currUser = task.getResult().toObject(UserModel.class);
+
+                    addCurrentUserAsPartitipiant(currUser, matchModel.getId());
+                }
+            }
+        });
+
+
+        documentReference.update("subscriptions", FieldValue.arrayUnion(matchModel)).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Toast.makeText(getApplicationContext(), "Subscribed", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                e.getStackTrace();
+            }
+        });
+
+        documentReference.update("points", FieldValue.increment(SUBSCRIPTION_POINTS)).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                e.getStackTrace();
+            }
+        });
+
+        btn_Subscribe_Match.setText("You're Subscribed");
+        btn_Subscribe_Match.setEnabled(false);
+    }
+
+    private void addCurrentUserAsPartitipiant(final UserModel currUser, String id) {
+
+        db = FirebaseFirestore.getInstance();
+
+        db.collection("Matches").document(id).update("partitipiants", FieldValue.arrayUnion(currUser)).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                Log.d("TAG", "partitipiant: " + currUser);
+            }
+        });
     }
 
     private void setMatchInfo(String match_id) {
@@ -61,6 +191,7 @@ public class MatchActivity extends AppCompatActivity {
 
                     matchModel = task.getResult().toObject(MatchModel.class);
                     setUpInfo(matchModel);
+                    subscribeToMatch(matchModel);
                 }
             }
         });
@@ -70,16 +201,29 @@ public class MatchActivity extends AppCompatActivity {
 
         ImageView img_Match_Image = findViewById(R.id.img_Match_Image);
 
-        if(matchModel.getImage_url().length() > 0)
-            img_Match_Image.setImageURI(Uri.parse(matchModel.getImage_url()));
-        else
-            img_Match_Image.setImageURI(Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_match%2Fstreetfut.jpg?alt=media&token=c5c0b31a-21b1-492c-911a-cb5cc4b81e8a"));
+        if(matchModel.getImage_url().length() > 0) {
+            Uri uri = Uri.parse(matchModel.getImage_url());
+            img_Match_Image.setImageURI(null);
+            img_Match_Image.setImageURI(uri);
+            Glide.with(this).load(uri).into(img_Match_Image);
 
-        RelativeLayout rel_Subscribe = findViewById(R.id.rel_Subscribe);
+        } else {
+            Uri uri = Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_match%2Fstreetfut.jpg?alt=media&token=c5c0b31a-21b1-492c-911a-cb5cc4b81e8a");
+            img_Match_Image.setImageURI(null);
+            img_Match_Image.setImageURI(uri);
+            Glide.with(this).load(uri).into(img_Match_Image);
+        }
 
-        if(FirebaseAuth.getInstance().getUid() == matchModel.getCreator().getUser_id())
+        rel_Subscribe = findViewById(R.id.rel_Subscribe);
+        btn_Update_Match = findViewById(R.id.btn_Update_Match);
+
+        if(FirebaseAuth.getInstance().getUid().equals(matchModel.getCreator().getUser_id())) {
             rel_Subscribe.setVisibility(View.GONE);
-        else rel_Subscribe.setVisibility(View.VISIBLE);
+            btn_Update_Match.setVisibility(View.VISIBLE);
+        } else {
+            rel_Subscribe.setVisibility(View.VISIBLE);
+            btn_Update_Match.setVisibility(View.GONE);
+        };
 
         TextView txt_MatchNameInfo_Match = (TextView) findViewById(R.id.txt_MatchNameInfo_Match);
         txt_MatchNameInfo_Match.setText(matchModel.getName());
@@ -130,6 +274,9 @@ public class MatchActivity extends AppCompatActivity {
 
         Button btn_Subscribe_Match = findViewById(R.id.btn_Subscribe_Match);
         btn_Subscribe_Match.setTypeface(typeface);
+
+        btn_Update_Match = findViewById(R.id.btn_Update_Match);
+        btn_Update_Match.setTypeface(typeface);
 
         TextView txt_StatusHint_Match = findViewById(R.id.txt_StatusHint_Match);
         txt_StatusHint_Match.setTypeface(typeface);

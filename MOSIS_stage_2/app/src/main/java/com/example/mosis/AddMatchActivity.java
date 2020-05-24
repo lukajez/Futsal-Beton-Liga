@@ -1,16 +1,20 @@
 package com.example.mosis;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -20,10 +24,13 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -37,12 +44,17 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.google.gson.internal.bind.ReflectiveTypeAdapterFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Objects;
+import java.util.Random;
 
 public class AddMatchActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
@@ -50,6 +62,8 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
     private DatePickerDialog.OnDateSetListener dateSetListener;
     private Button btn_Confirm_AddMatch;
     private EditText etxt_Name_AddMatch;
+    private ImageView match_image_AddMatch;
+    private static final int TAKE_IMAGE_CODE = 10001;
 
     private boolean fieldName = false;
     private boolean fieldType = true;
@@ -64,6 +78,7 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
     private MatchModel matchModel;
     private UserModel userModel;
 
+    private Uri pickedImageUri;
     private FusedLocationProviderClient fusedLocationProviderClient;
 
     @Override
@@ -160,10 +175,9 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
             }
         });
 
-        setUpFont();
-    }
+        match_image_AddMatch = findViewById(R.id.match_image_AddMatch);
 
-    private void addMatchToFirebase() {
+        setUpFont();
     }
 
     @Override
@@ -195,28 +209,30 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
         db = FirebaseFirestore.getInstance();
 
 
-        if(matchModel == null) {
-
+        if(matchModel == null)
             matchModel = new MatchModel();
 
-            db.collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                    if(task.isSuccessful()) {
-                        userModel = task.getResult().toObject(UserModel.class);
+        db.collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if(task.isSuccessful()) {
+                    userModel = task.getResult().toObject(UserModel.class);
 
-                        matchModel.setCreator(userModel);
-                        matchModel.setName(name);
-                        matchModel.setType(type);
-                        matchModel.setDate(date);
+                    ArrayList<UserModel> userModels = new ArrayList<>();
+                    userModels.add(userModel);
+                    matchModel.setCreator(userModel);
+                    matchModel.setName(name);
+                    matchModel.setType(type);
+                    matchModel.setDate(date);
+                    matchModel.setPartitipiants(userModels);
 
-                        setMatchInFirestore();
+                    setMatchInFirestore();
 
-                        //updateUserInFirestore();
-                    }
+                    //updateUserInFirestore();
                 }
-            });
-        }
+            }
+        });
+
     }
 
     private void setMatchInFirestore() {
@@ -302,6 +318,8 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
                     matchLocation.setGeoPoint(geoPoint);
                     matchLocation.setTimestamp(null);
                     matchLocation.setMatch(matchModel);
+                    matchLocation.setLocation_name(matchModel.getName());
+                    matchLocation.setMatch_type(matchModel.getType());
 
                     saveMatchLocation();
                 }
@@ -342,7 +360,6 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
                 }
             });
         } else {
-            Log.d("IZ NEKOG RAZLOGA NECE MAJKU TI JEBEM U PICKU", "PrOCITAJ OVO PRVO");
         }
     }
 
@@ -362,6 +379,91 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
                 }
             });
         }
+    }
+
+    private static final int MAX_LENGTH = 12;
+
+    public static String random() {
+        Random generator = new Random();
+        StringBuilder randomStringBuilder = new StringBuilder();
+        int randomLength = generator.nextInt(MAX_LENGTH);
+        char tempChar;
+        for (int i = 0; i < randomLength; i++){
+            tempChar = (char) (generator.nextInt(96) + 32);
+            randomStringBuilder.append(tempChar);
+        }
+        return randomStringBuilder.toString();
+    }
+
+
+    public void handleImageClick(View view) {
+
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if(intent.resolveActivity(getPackageManager()) != null){
+            startActivityForResult(intent, TAKE_IMAGE_CODE);
+        }
+    }
+    @Override
+    protected  void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == TAKE_IMAGE_CODE) {
+            switch (resultCode){
+                case RESULT_OK:
+                    Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+                    handleUpload(bitmap);
+            }
+        }
+    }
+
+    private void handleUpload(Bitmap bitmap) {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+
+        String uid = random();
+
+        final StorageReference reference = FirebaseStorage.getInstance().getReference()
+                .child("matchImages")
+                .child(uid + ".jpeg");
+
+        reference.putBytes(baos.toByteArray())
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        getDownloadUrl(reference);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e("TAG", "onFailure: " + e.getCause());
+            }
+        });
+    }
+
+    private void getDownloadUrl(StorageReference reference) {
+        reference.getDownloadUrl()
+                .addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        Log.d("TAG", "onSuccess DOWNLOAD URL IS: " + uri);
+                        setMatchProfileUrl(uri);
+                    }
+                });
+    }
+
+    private void setMatchProfileUrl(Uri uri) {
+
+        pickedImageUri = uri;
+
+        if(matchModel == null)
+            matchModel = new MatchModel();
+
+        if(pickedImageUri != null)
+            matchModel.setImage_url(pickedImageUri.toString());
+        else if(uri != null)
+            matchModel.setImage_url(uri.toString());
+
+        Glide.with(this).load(uri).into(match_image_AddMatch);
     }
 
     protected void setUpFont(){

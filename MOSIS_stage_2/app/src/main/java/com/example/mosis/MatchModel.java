@@ -1,5 +1,7 @@
 package com.example.mosis;
 
+import com.google.android.gms.maps.model.MarkerOptions;
+
 import java.util.ArrayList;
 
 public class MatchModel {
@@ -9,7 +11,7 @@ public class MatchModel {
     private String type; //single, tournament, friendly, charity tournament...
     private UserModel creator;
     private String date;
-    private ArrayList<UserModel> participiants;
+    private ArrayList<UserModel> partitipiants;
     private UserModel winner;
     private String status; //available, not available
     private boolean played;
@@ -18,7 +20,7 @@ public class MatchModel {
     public MatchModel() {
 
         this.name = "Default Match";
-        this.participiants = new ArrayList<>();
+        this.partitipiants = new ArrayList<>();
         this.winner = null;
         this.status = "available";
         this.played = false;
@@ -26,12 +28,24 @@ public class MatchModel {
 
     }
 
+    public MatchModel(MatchModel matchModel) {
+        this.name = matchModel.getName();
+        this.type = matchModel.getType();
+        this.creator = matchModel.getCreator();
+        this.date = matchModel.getDate();
+        this.partitipiants = matchModel.getPartitipiants();
+        this.winner = matchModel.getWinner();
+        this.status = matchModel.getStatus();
+        this.played = matchModel.isPlayed();
+        this.image_url = matchModel.getImage_url();
+    }
+
     public MatchModel(String name, String type, UserModel creator, String date, ArrayList<UserModel> participiants, UserModel winner, String status, boolean played, String image_url) {
         this.name = name;
         this.type = type;
         this.creator = creator;
         this.date = date;
-        this.participiants = participiants;
+        this.partitipiants = participiants;
         this.winner = winner;
         this.status = status;
         this.played = played;
@@ -78,12 +92,12 @@ public class MatchModel {
         this.date = date;
     }
 
-    public ArrayList<UserModel> getParticipiants() {
-        return participiants;
+    public ArrayList<UserModel> getPartitipiants() {
+        return partitipiants;
     }
 
-    public void setParticipiants(ArrayList<UserModel> participiants) {
-        this.participiants = participiants;
+    public void setPartitipiants(ArrayList<UserModel> participiants) {
+        this.partitipiants = participiants;
     }
 
     public UserModel getWinner() {
@@ -117,4 +131,8 @@ public class MatchModel {
     public void setImage_url(String image_url) {
         this.image_url = image_url;
     }
+
+
+
+
 }

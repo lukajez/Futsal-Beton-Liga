@@ -1,9 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".UpdateMatchActivity">
+    android:layout_width="match_parent"
+    tools:context=".UpdateMatchActivity"
+    android:background="@color/colorBackground"
+    android:orientation="vertical">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <RelativeLayout
+        android:id="@+id/lay_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:background="@drawable/menu_shape">
+
+        <Button
+            android:id="@+id/btn_Back_AddMatch"
+            android:layout_width="16dp"
+            android:layout_height="35dp"
+            android:background="@drawable/ic_back_filled"
+            android:layout_centerVertical="true"
+            />
+        <TextView
+            android:id="@+id/txt_Update_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="UPDATE MATCH"
+            android:textColor="#fff"
+            android:textSize="15pt"
+            android:layout_centerInParent="true"
+            />
+
+        <Button
+            android:id="@+id/btn_Confirm_UpdateMatch"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:background="@drawable/ic_confirm"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:background="@drawable/ic_map_network">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="40dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp">
+
+            <TextView
+                android:id="@+id/txt_Update_MatchInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MATCH WINNER"
+                android:textColor="#fff"
+                android:textSize="20sp"
+                android:layout_centerInParent="true"
+                />
+            <TextView
+                android:id="@+id/txt_Update_MatchInfoExp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Set up winner for this match"
+                android:textColor="#fff"
+                android:textSize="15sp"
+                android:layout_centerInParent="true"
+                />
+
+            <Spinner
+                android:id="@+id/spinner_UpdateMatch"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="30dp"
+                android:backgroundTint="#fff"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#fff"/>
+
+        </LinearLayout>
+    </RelativeLayout>
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="30dp"
+            android:layout_marginStart="3dp"
+            android:layout_marginEnd="3dp">
+
+            <Spinner
+                android:id="@+id/spinnerAddMatch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Type.."
+                android:textSize="18sp"
+                android:textColor="#fff"
+                android:textColorHint="#6f6f6f"
+                android:backgroundTint="#fff"
+                />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#fff"
+                android:layout_marginTop="1dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+
+
+</LinearLayout>

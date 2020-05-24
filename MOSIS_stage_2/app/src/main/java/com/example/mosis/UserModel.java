@@ -11,11 +11,12 @@ public class UserModel {
     private String team;
     private ArrayList<String> friends = new ArrayList<>();
     private ArrayList<MatchModel> matches = new ArrayList<>();
+    private ArrayList<MatchModel> subscriptions = new ArrayList<>();
     private String image_url;
 
     public UserModel(){}
 
-    public UserModel(String user_id, String email, String username, int points, String team, ArrayList<String> friends, ArrayList<MatchModel> matches, String image_url) {
+    public UserModel(String user_id, String email, String username, int points, String team, ArrayList<String> friends, ArrayList<MatchModel> matches, ArrayList<MatchModel> subscriptions, String image_url) {
         this.user_id = user_id;
         this.email = email;
         this.username = username;
@@ -23,8 +24,20 @@ public class UserModel {
         this.team = team;
         this.friends = friends;
         this.matches = matches;
+        this.subscriptions = subscriptions;
         this.image_url = image_url;
     }
+
+//    public UserModel(String user_id, String email, String username, int points, String team, ArrayList<String> friends, ArrayList<MatchModel> matches, String image_url) {
+//        this.user_id = user_id;
+//        this.email = email;
+//        this.username = username;
+//        this.points = points;
+//        this.team = team;
+//        this.friends = friends;
+//        this.matches = matches;
+//        this.image_url = image_url;
+//    }
 
     public String getEmail() {
         return email;
@@ -74,7 +87,6 @@ public class UserModel {
         this.image_url = image_url;
     }
 
-
     public String getUser_id() {
         return user_id;
     }
@@ -89,5 +101,13 @@ public class UserModel {
 
     public void setMatches(ArrayList<MatchModel> matches) {
         this.matches = matches;
+    }
+
+    public ArrayList<MatchModel> getSubscriptions() {
+        return subscriptions;
+    }
+
+    public void setSubscriptions(ArrayList<MatchModel> subscriptions) {
+        this.subscriptions = subscriptions;
     }
 }

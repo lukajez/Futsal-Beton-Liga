@@ -33,6 +33,18 @@
             android:layout_centerInParent="true"
             />
 
+        <Button
+            android:id="@+id/btn_Update_Match"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#00ffffff"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:text="SET WINNER"
+            android:textSize="15sp"
+            android:textColor="#fff"
+            />
+
     </RelativeLayout>
 
     <LinearLayout
@@ -74,8 +86,7 @@
         <ImageView
             android:id="@+id/img_Match_Image"
             android:layout_width="match_parent"
-            android:layout_height="246dp"
-            android:background="@drawable/holder_image"/>
+            android:layout_height="230dp" />
 
     </LinearLayout>
 
@@ -250,8 +261,5 @@
             android:layout_alignParentEnd="true"
             android:background="#fff"/>
     </RelativeLayout>
-
-
-
 
 </LinearLayout>

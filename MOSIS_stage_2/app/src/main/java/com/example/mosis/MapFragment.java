@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.location.Criteria;
 import android.location.Location;
@@ -26,7 +27,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.common.util.ArrayUtils;
@@ -57,6 +62,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Objects;
 
 import static androidx.core.content.ContextCompat.getSystemService;
@@ -77,8 +83,8 @@ public class MapFragment extends Fragment {
     private ArrayList<MatchModel> myMatchModels = new ArrayList<>();
     private ArrayList<MatchModel> allMatchModels = new ArrayList<>();
     private UserModel userModel;
+    private String searchTerm = "";
 
-    //private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     private FusedLocationProviderClient fusedLocationProviderClient;
 
@@ -91,7 +97,18 @@ public class MapFragment extends Fragment {
     private ArrayList<ClusterMarker> mClusterMarkers = new ArrayList<>();
     private ArrayList<ClusterMatchMarker> mClusterMatchMarkers = new ArrayList<>();
     private ArrayList<MatchLocation> matchLocations = new ArrayList<>();
-    ImageButton btnAddMatchOnMap;
+    private ArrayList<String> filterList = new ArrayList<>();
+
+    RelativeLayout rel_lay_search_Map;
+    ImageButton btnAddMatchOnMap, btnSearchMatchOnMap, searchButton_Map;
+    EditText searchField_Map;
+    HorizontalScrollView filters_HorizontalView;
+    Button btn_FilterAll_Map, btn_FilterAvailable_Map, btn_FilterSingle_Map, btn_FilterTournament_Map, btn_FilterCharityTournament_Map, btn_FilterFriendlyTournament_Map;
+    String filterTerm = "";
+    String filterAtribut = "";
+
+    private boolean controllFilterAvailable, controlFilterSingle, controlFilterTour, controlFilterCharTour, controlFilterFrTour = false;
+    private boolean controlFilterAll = true;
 
     FirebaseFirestore db;
 
@@ -108,6 +125,14 @@ public class MapFragment extends Fragment {
 
         db = FirebaseFirestore.getInstance();
         btnAddMatchOnMap = view.findViewById(R.id.btnAddMatchOnMap);
+        btnSearchMatchOnMap = view.findViewById(R.id.btnSearchMatchOnMap);
+
+        btn_FilterAll_Map = view.findViewById(R.id.btn_FilterAll_Map);
+        btn_FilterAvailable_Map = view.findViewById(R.id.btn_FilterAvailable_Map);
+        btn_FilterSingle_Map = view.findViewById(R.id.btn_FilterSingle_Map);
+        btn_FilterCharityTournament_Map = view.findViewById(R.id.btn_FilterCharityTournament_Map);
+        btn_FilterTournament_Map = view.findViewById(R.id.btn_FilterTournament_Map);
+        btn_FilterFriendlyTournament_Map = view.findViewById(R.id.btn_FilterFriendlyTournament_Map);
 
         if (checkLocationPermission()) {
             mapView = (MapView) view.findViewById(R.id.mapView);
@@ -134,7 +159,6 @@ public class MapFragment extends Fragment {
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(Objects.requireNonNull(getContext()));
 
-
         btnAddMatchOnMap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -144,15 +168,732 @@ public class MapFragment extends Fragment {
             }
         });
 
+        rel_lay_search_Map = view.findViewById(R.id.rel_lay_search_Map);
+        filters_HorizontalView = view.findViewById(R.id.filters_HorizontalView);
+
+        btnSearchMatchOnMap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(rel_lay_search_Map.getVisibility() == View.VISIBLE) {
+                    rel_lay_search_Map.setVisibility(View.GONE);
+                    btnSearchMatchOnMap.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.ic_search));
+                    filters_HorizontalView.setVisibility(View.VISIBLE);
+//                    mClusterMatchManager.clearItems();
+//                    mClusterMatchMarkers.clear();
+                    clearMatches();
+                    addMatchMarkers();
+                }
+
+                else {
+                    rel_lay_search_Map.setVisibility(View.VISIBLE);
+                    filters_HorizontalView.setVisibility(View.VISIBLE);
+                    btnSearchMatchOnMap.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.collapse_arrow));
+                }
+            }
+        });
+
+        searchButton_Map = view.findViewById(R.id.searchButton_Map);
+        searchField_Map = view.findViewById(R.id.searchField_Map);
+
+        searchButton_Map.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) { //ovde ubaci searchTerm = editdfsfsf
+                if(searchField_Map.getText().toString().length() > 0) {
+                    searchTerm = searchField_Map.getText().toString();
+                    //searchMatchesByTerm(searchTerm);
+                    Log.d("204 TAG", "filterTerm: " + filterTerm);
+                    Log.d("205 TAG", "filterAtribut: " + filterAtribut);
+
+                    filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
+                }
+                else {
+                    searchTerm = "";
+//                    clearMatches();
+//                    addMatchMarkers();
+                    filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
+                }
+            }
+        });
+
+        btn_FilterAll_Map.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(controlFilterAll) {
+                    btn_FilterAll_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterAll_Map.setTextColor(Color.parseColor("#ffffff"));
+                    controlFilterAll = false;
+
+                } else {
+                    btn_FilterAll_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpoljeen));
+                    btn_FilterAll_Map.setTextColor(Color.parseColor("#000000"));
+
+                    btn_FilterAvailable_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterAvailable_Map.setTextColor(Color.parseColor("#ffffff"));
+
+                    btn_FilterSingle_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterSingle_Map.setTextColor(Color.parseColor("#ffffff"));
+
+                    btn_FilterCharityTournament_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterCharityTournament_Map.setTextColor(Color.parseColor("#ffffff"));
+
+                    btn_FilterTournament_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterTournament_Map.setTextColor(Color.parseColor("#ffffff"));
+
+                    btn_FilterFriendlyTournament_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterFriendlyTournament_Map.setTextColor(Color.parseColor("#ffffff"));
+
+                    filterTerm = "";
+                    filterAtribut = "";
+                    controlFilterAll = true;
+                    controlFilterSingle = false;
+                    controlFilterTour = false;
+                    controlFilterCharTour = false;
+                    controlFilterFrTour = false;
+                    controllFilterAvailable = false;
+                    filteredMatchLocations.clear();
+
+                    filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
+                }
+            }
+        });
+
+        btn_FilterAvailable_Map.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(controllFilterAvailable) {
+                    btn_FilterAvailable_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterAvailable_Map.setTextColor(Color.parseColor("#ffffff"));
+                    controllFilterAvailable = false;
+                    filterTerm = "";
+                    filterAtribut = "";
+                    clearSpecFilter("available", "location_status");
+
+                } else {
+                    btn_FilterAvailable_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpoljeen));
+                    btn_FilterAvailable_Map.setTextColor(Color.parseColor("#000000"));
+
+                    btn_FilterAll_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterAll_Map.setTextColor(Color.parseColor("#ffffff"));
+
+                    filterTerm = "available";
+                    filterAtribut = "location_status";
+                    controllFilterAvailable = true;
+
+                    filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
+                }
+            }
+        });
+
+        btn_FilterSingle_Map.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(controlFilterSingle) {
+                    btn_FilterSingle_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterSingle_Map.setTextColor(Color.parseColor("#ffffff"));
+                    controlFilterSingle = false;
+                    filterTerm = "";
+                    filterAtribut = "";
+                    clearSpecFilter("Single Match", "location_type");
+
+                } else {
+                    btn_FilterSingle_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpoljeen));
+                    btn_FilterSingle_Map.setTextColor(Color.parseColor("#000000"));
+
+                    btn_FilterAll_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterAll_Map.setTextColor(Color.parseColor("#ffffff"));
+
+                    filterTerm = "Single Match";
+                    filterAtribut = "location_type";
+                    controlFilterSingle = true;
+
+                    filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
+                }
+            }
+        });
+        btn_FilterCharityTournament_Map.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(controlFilterCharTour) {
+                    btn_FilterCharityTournament_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterCharityTournament_Map.setTextColor(Color.parseColor("#ffffff"));
+                    controlFilterCharTour = false;
+                    filterTerm = "";
+                    filterAtribut = "";
+
+                    clearSpecFilter("Charity Tournament", "location_type");
+
+                } else {
+                    btn_FilterCharityTournament_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpoljeen));
+                    btn_FilterCharityTournament_Map.setTextColor(Color.parseColor("#000000"));
+
+                    btn_FilterAll_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterAll_Map.setTextColor(Color.parseColor("#ffffff"));
+
+                    filterTerm = "Charity Tournament";
+                    filterAtribut = "location_type";
+                    controlFilterCharTour = true;
+
+                    filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
+                }
+
+            }
+        });
+        btn_FilterTournament_Map.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(controlFilterTour) {
+                    btn_FilterTournament_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterTournament_Map.setTextColor(Color.parseColor("#ffffff"));
+                    controlFilterTour = false;
+                    filterTerm = "";
+                    filterAtribut = "";
+                    clearSpecFilter("Tournament", "location_type");
+
+                } else {
+                    btn_FilterTournament_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpoljeen));
+                    btn_FilterTournament_Map.setTextColor(Color.parseColor("#000000"));
+
+                    btn_FilterAll_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterAll_Map.setTextColor(Color.parseColor("#ffffff"));
+
+                    filterTerm = "Tournament";
+                    filterAtribut = "location_type";
+                    controlFilterTour = true;
+
+                    filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
+                }
+            }
+        });
+        btn_FilterFriendlyTournament_Map.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(controlFilterFrTour) {
+                    btn_FilterFriendlyTournament_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterFriendlyTournament_Map.setTextColor(Color.parseColor("#ffffff"));
+                    controlFilterFrTour = false;
+                    filterTerm = "";
+                    filterAtribut = "";
+                    clearSpecFilter("Friendly Tournament", "location_type");
+
+                } else {
+                    btn_FilterFriendlyTournament_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpoljeen));
+                    btn_FilterFriendlyTournament_Map.setTextColor(Color.parseColor("#000000"));
+
+                    btn_FilterAll_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpolje));
+                    btn_FilterAll_Map.setTextColor(Color.parseColor("#ffffff"));
+
+                    filterTerm = "Friendly Tournament";
+                    filterAtribut = "location_type";
+                    controlFilterFrTour = true;
+
+                    filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
+                }
+            }
+        });
+
         //get My matches
         setAllMatches();
 
         //get All matches (mine and my friends)
-
         getMatches();
-
         setUpFont();
+
         return view;
+    }
+
+    private ArrayList<MatchLocation> helper = new ArrayList<>();
+    private ArrayList<String> helperTerm = new ArrayList<>();
+
+    private void clearSpecFilter(String filterTerm, String filterAtribut) {
+
+        Log.d("467 TAG", "clearSpecFilter: " + filteredMatchLocations);
+
+        if(filteredMatchLocations.size() > 0) {
+            if(filterAtribut.equals("location_type"))
+                filteredMatchLocations.removeIf(matchLocation -> matchLocation.getMatch().getType().equals(filterTerm));
+
+            else if(filterAtribut.equals("location_status")) {
+
+                if(controlFilterTour)
+                    helperTerm.add("Tournament");
+
+                if(controlFilterCharTour)
+                    helperTerm.add("Charity Tournament");
+
+                if(controlFilterFrTour)
+                    helperTerm.add("Friendly Tournament");
+
+                if(controlFilterSingle)
+                    helperTerm.add("Single Match");
+
+
+
+//                for(MatchLocation matchLocation : filteredMatchLocations) {
+//                    if(helperTerm.get)
+//                    helperTerm.add(matchLocation.getMatch().getType());
+//                }
+            }
+        }
+
+        clearMatches();
+
+        if(filteredMatchLocations.size() > 0) {
+            for(MatchLocation matchLocation: filteredMatchLocations) {
+
+                try{
+                    String snippet = "";
+                    if(matchLocation.getMatch().getCreator().getUser_id().equals(FirebaseAuth.getInstance().getUid())){
+                        snippet = "This is your match: ";
+                    }
+                    else{
+                        snippet = "This is your friend's match: ";
+                    }
+
+                    Uri avatar = Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_match%2Fstreetfut.jpg?alt=media&token=c5c0b31a-21b1-492c-911a-cb5cc4b81e8a"); // set the default avatar
+
+                    try{
+                        if(matchLocation.getMatch().getImage_url().length() > 0)
+                            avatar = Uri.parse(matchLocation.getMatch().getImage_url());
+
+                    } catch (NumberFormatException e){
+                        Log.d("TAG", "addMapMarkers: no avatar for " + matchLocation.getMatch().getCreator().getUsername() + ", setting default.");
+                    }
+
+                    ClusterMatchMarker newClusterMarker = new ClusterMatchMarker(
+                            new LatLng(matchLocation.getGeoPoint().getLatitude(), matchLocation.getGeoPoint().getLongitude()),
+                            matchLocation.getMatch().getName(),
+                            snippet,
+                            avatar,
+                            matchLocation.getMatch()
+                    );
+
+                    mClusterMatchManager.addItem(newClusterMarker);
+                    mClusterMatchMarkers.add(newClusterMarker);
+
+                } catch (NullPointerException e){
+                    Log.e("TAG", "addMapMarkers: NullPointerException: " + e.getMessage() );
+                }
+            }
+        } else {
+            if(searchTerm.length() > 0) {
+                filterMatchesAndSearch(searchTerm, "", "");
+            } else addMatchMarkers();
+        }
+
+        mClusterMatchManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterMatchMarker>() {
+            @Override
+            public boolean onClusterItemClick(ClusterMatchMarker item) {
+
+                Log.d("522 TAG", "Item: " + item.getTitle() + " /// " + item.getMatch().toString());
+
+                try {
+
+                    Intent intent = new Intent(getContext(), MatchActivity.class);
+                    intent.putExtra("match_id", item.getMatch().getId());
+
+                    startActivity(intent);
+                    getActivity().overridePendingTransition(0,0);
+
+                    return true;
+
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        });
+
+        mClusterMatchManager.cluster();
+
+        Log.d("477 TAG", "clearSpecFilter: " + filteredMatchLocations);
+    }
+
+    private ArrayList<MatchLocation> prevMatchLocations = new ArrayList<>();
+    private ArrayList<MatchLocation> filteredMatchLocations = new ArrayList<>();
+
+    private void filterMatchesAndSearch(final String searchTerm, final String filterTerm, final String atribut) {
+
+        if(googleMap != null) {
+
+            clearMatches();
+
+            if(mClusterMatchManager == null) {
+                mClusterMatchManager = new ClusterManager<ClusterMatchMarker>(getContext(), googleMap);
+            }
+
+            if(mClusterMatchManagerRenderer == null) {
+                mClusterMatchManagerRenderer = new MatchClusterManagerRenderer(
+                        getContext(), googleMap,
+                        mClusterMatchManager
+                );
+                mClusterMatchManager.setRenderer(mClusterMatchManagerRenderer);
+            }
+
+            //userLocations()
+            db = FirebaseFirestore.getInstance();
+
+            db.collection("Match Locations").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    if(task.isSuccessful()) {
+                        for(DocumentSnapshot documentSnapshot : task.getResult()) {
+
+                            MatchLocation _matchLocation = documentSnapshot.toObject(MatchLocation.class);
+                            matchLocations.add(_matchLocation);
+                        }
+
+                        if(searchTerm.length() > 0) {
+
+                            //TODO -- it has searchTerm, ask for filters
+
+                            Log.d("532 TAG", "searchTerm: " + searchTerm);
+
+                            if (matchLocations.size() > 0)
+                                matchLocations.removeIf(mLoc -> !mLoc.getMatch().getName().equals(searchTerm));
+
+
+                            if (filteredMatchLocations.size() > 0)
+                                filteredMatchLocations.removeIf(mLoc -> !mLoc.getMatch().getName().equals(searchTerm));
+
+                            if (filterTerm.length() > 0) {
+                                //TODO -- it has filter, filter matchLocations by that filter
+
+                                if (atribut.equals("location_type")) {
+
+                                    for(MatchLocation matchLocation : matchLocations) {
+                                        if (matchLocation.getMatch().getType().equals(filterTerm))
+                                            filteredMatchLocations.add(matchLocation);
+                                    }
+
+                                } else if (atribut.equals("location_status")) {
+
+                                    if (filteredMatchLocations.size() > 0) {
+
+                                        prevMatchLocations = filteredMatchLocations;
+                                        filteredMatchLocations.removeIf(mLoc -> !mLoc.getMatch().getStatus().equals(filterTerm));
+                                    }
+                                    else {
+
+                                        prevMatchLocations.clear();
+                                        //prevMatchLocations.addAll(matchLocations);
+
+                                        matchLocations.removeIf(matchLocation -> !matchLocation.getMatch().getStatus().equals(filterTerm));
+                                        filteredMatchLocations.addAll(matchLocations);
+
+                                        matchLocations.clear();
+                                        matchLocations.addAll(prevMatchLocations);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        else if (filterTerm.length() > 0) {
+                            //TODO -- it has filter, filter matchLocations by that filter
+
+                            Log.d("341 TAG", "filterTerm: " + filterTerm);
+                            Log.d("342 TAG", "atribut: " + atribut);
+
+                            if (atribut.equals("location_type")) {
+
+                                for(MatchLocation matchLocation : new ArrayList<MatchLocation>(matchLocations)) {
+                                    if (matchLocation.getMatch().getType().equals(filterTerm))
+                                        filteredMatchLocations.add(matchLocation);
+                                }
+
+                            } else if (atribut.equals("location_status")) {
+
+                                if (filteredMatchLocations.size() > 0)
+                                    filteredMatchLocations.removeIf(matchLocation -> !matchLocation.getMatch().getStatus().equals(filterTerm));
+
+                                else matchLocations.removeIf(matchLocation -> !matchLocation.getMatch().getStatus().equals(filterTerm));
+                            }
+                        }
+
+                        if(filteredMatchLocations.size() > 0) {
+                            for(MatchLocation matchLocation: filteredMatchLocations) {
+
+                                try{
+                                    String snippet = "";
+                                    if(matchLocation.getMatch().getCreator().getUser_id().equals(FirebaseAuth.getInstance().getUid())){
+                                        snippet = "This is your match: ";
+                                    }
+                                    else{
+                                        snippet = "This is your friend's match: ";
+                                    }
+
+                                    Uri avatar = Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_match%2Fstreetfut.jpg?alt=media&token=c5c0b31a-21b1-492c-911a-cb5cc4b81e8a"); // set the default avatar
+
+                                    try{
+                                        if(matchLocation.getMatch().getImage_url().length() > 0)
+                                            avatar = Uri.parse(matchLocation.getMatch().getImage_url());
+
+                                    } catch (NumberFormatException e){
+                                        Log.d("TAG", "addMapMarkers: no avatar for " + matchLocation.getMatch().getCreator().getUsername() + ", setting default.");
+                                    }
+
+                                    ClusterMatchMarker newClusterMarker = new ClusterMatchMarker(
+                                            new LatLng(matchLocation.getGeoPoint().getLatitude(), matchLocation.getGeoPoint().getLongitude()),
+                                            matchLocation.getMatch().getName(),
+                                            snippet,
+                                            avatar,
+                                            matchLocation.getMatch()
+                                    );
+
+                                    mClusterMatchManager.addItem(newClusterMarker);
+                                    mClusterMatchMarkers.add(newClusterMarker);
+
+                                } catch (NullPointerException e){
+                                    Log.e("TAG", "addMapMarkers: NullPointerException: " + e.getMessage() );
+                                }
+                            }
+                        }
+                        else if(matchLocations.size() > 0) {
+                            for(MatchLocation matchLocation: matchLocations) {
+
+                                try{
+                                    String snippet = "";
+                                    if(matchLocation.getMatch().getCreator().getUser_id().equals(FirebaseAuth.getInstance().getUid())){
+                                        snippet = "This is your match: ";
+                                    }
+                                    else{
+                                        snippet = "This is your friend's match: ";
+                                    }
+
+                                    Uri avatar = Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_match%2Fstreetfut.jpg?alt=media&token=c5c0b31a-21b1-492c-911a-cb5cc4b81e8a"); // set the default avatar
+
+                                    try{
+                                        if(matchLocation.getMatch().getImage_url().length() > 0)
+                                            avatar = Uri.parse(matchLocation.getMatch().getImage_url());
+
+                                    } catch (NumberFormatException e){
+                                        Log.d("TAG", "addMapMarkers: no avatar for " + matchLocation.getMatch().getCreator().getUsername() + ", setting default.");
+                                    }
+
+                                    ClusterMatchMarker newClusterMarker = new ClusterMatchMarker(
+                                            new LatLng(matchLocation.getGeoPoint().getLatitude(), matchLocation.getGeoPoint().getLongitude()),
+                                            matchLocation.getMatch().getName(),
+                                            snippet,
+                                            avatar,
+                                            matchLocation.getMatch()
+                                    );
+
+                                    mClusterMatchManager.addItem(newClusterMarker);
+                                    mClusterMatchMarkers.add(newClusterMarker);
+
+                                } catch (NullPointerException e){
+                                    Log.e("TAG", "addMapMarkers: NullPointerException: " + e.getMessage() );
+                                }
+                            }
+                        }
+
+                        mClusterMatchManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterMatchMarker>() {
+                            @Override
+                            public boolean onClusterItemClick(ClusterMatchMarker item) {
+
+                                Log.d("522 TAG", "Item: " + item.getTitle() + " /// " + item.getMatch().toString());
+
+                                try {
+
+                                    Intent intent = new Intent(getContext(), MatchActivity.class);
+                                    intent.putExtra("match_id", item.getMatch().getId());
+
+                                    startActivity(intent);
+                                    getActivity().overridePendingTransition(0,0);
+
+                                    return true;
+
+                                } catch (Exception e) {
+                                    return false;
+                                }
+                            }
+                        });
+
+                        mClusterMatchManager.cluster();
+                    }
+
+                    //mClusterMatchManager.cluster();
+                }
+            });
+        }
+
+        //for()
+    }
+
+//    private void filterMatches(ArrayList<String> filterList) {
+//
+//        for(String filterTerm : filterList) {
+//            switch (filterTerm) {
+//                case "All" :
+//                    clearMatches();
+//                    addMatchMarkers();
+//                    break;
+//
+//                case "Single Match" :
+//                    clearMatches();
+//                    filterMatchesByTerm(filterTerm, "location_type");
+//                    break;
+//
+//                case "Tournament" :
+//                    clearMatches();
+//                    filterMatchesByTerm(filterTerm, "type");
+//                    break;
+//
+//                case "Charity Tournament" :
+//                    clearMatches();
+//                    filterMatchesByTerm(filterTerm, "type");
+//                    break;
+//
+//                case "Friendly Tournament" :
+//                    clearMatches();
+//                    filterMatchesByTerm(filterTerm, "type");
+//                    break;
+//
+//                case "available" :
+//                    clearMatches();
+//                    filterMatchesByTerm(filterTerm, "status");
+//                    break;
+//
+//                case "played" :
+//                    clearMatches();
+//                    filterMatchesByTerm(filterTerm, "status");
+//                    break;
+//            }
+//        }
+//    }
+//
+//    private void filterMatchesByTerm(String filterTerm, String atribut) {
+//        if(filterTerm.equals("All")) {
+//
+//        }
+//    }
+
+    private void searchMatchesByTerm(final String searchTerm) {
+
+        if(googleMap != null) {
+
+            clearMatches();
+
+            Log.d("206 TAG", "searchMatchesByTerm: " + mClusterMatchMarkers + " " + mClusterMatchManager);
+
+            if(mClusterMatchManager == null) {
+                mClusterMatchManager = new ClusterManager<ClusterMatchMarker>(getContext(), googleMap);
+            }
+
+            if(mClusterMatchManagerRenderer == null) {
+                mClusterMatchManagerRenderer = new MatchClusterManagerRenderer(
+                        getContext(), googleMap,
+                        mClusterMatchManager
+                );
+                mClusterMatchManager.setRenderer(mClusterMatchManagerRenderer);
+            }
+
+            //userLocations()
+            db = FirebaseFirestore.getInstance();
+
+            db.collection("Match Locations").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                    if(task.isSuccessful()) {
+                        for(DocumentSnapshot documentSnapshot : task.getResult()) {
+
+                            MatchLocation _matchLocation = documentSnapshot.toObject(MatchLocation.class);
+
+                            Log.d("347 TAG", "matchLocation: " + _matchLocation.getMatch().getName());
+
+                            matchLocations.add(_matchLocation);
+
+                        }
+
+                        for(MatchLocation matchLocation: matchLocations) {
+
+                            Log.d("352 TAG", "matchLocation: " + matchLocation.getMatch().getName());
+                            if(matchLocation.getMatch().getName().equals(searchTerm)) {
+
+                                Log.d("354 TAG", "matchLocation: " + matchLocation.getMatch().getName());
+                                try{
+                                    String snippet = "";
+                                    if(matchLocation.getMatch().getCreator().getUser_id().equals(FirebaseAuth.getInstance().getUid())){
+                                        snippet = "This is your match: ";
+                                    }
+                                    else{
+                                        snippet = "This is your friend's match: ";
+                                    }
+
+                                    Uri avatar = Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_match%2Fstreetfut.jpg?alt=media&token=c5c0b31a-21b1-492c-911a-cb5cc4b81e8a"); // set the default avatar
+
+                                    try{
+                                        if(matchLocation.getMatch().getImage_url().length() > 0)
+                                            avatar = Uri.parse(matchLocation.getMatch().getImage_url());
+
+                                    } catch (NumberFormatException e){
+                                        Log.d("TAG", "addMapMarkers: no avatar for " + matchLocation.getMatch().getCreator().getUsername() + ", setting default.");
+                                    }
+
+                                    ClusterMatchMarker newClusterMarker = new ClusterMatchMarker(
+                                            new LatLng(matchLocation.getGeoPoint().getLatitude(), matchLocation.getGeoPoint().getLongitude()),
+                                            matchLocation.getMatch().getName(),
+                                            snippet,
+                                            avatar,
+                                            matchLocation.getMatch()
+                                    );
+
+                                    mClusterMatchManager.addItem(newClusterMarker);
+                                    mClusterMatchMarkers.add(newClusterMarker);
+
+                                } catch (NullPointerException e){
+                                    Log.e("TAG", "addMapMarkers: NullPointerException: " + e.getMessage() );
+                                }
+
+                            }
+                        }
+
+                        mClusterMatchManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterMatchMarker>() {
+                            @Override
+                            public boolean onClusterItemClick(ClusterMatchMarker item) {
+
+                                Log.d("522 TAG", "Item: " + item.getTitle() + " /// " + item.getMatch().toString());
+
+                                try {
+
+                                    Intent intent = new Intent(getContext(), MatchActivity.class);
+                                    intent.putExtra("match_id", item.getMatch().getId());
+
+                                    startActivity(intent);
+                                    getActivity().overridePendingTransition(0,0);
+
+                                    return true;
+
+                                } catch (Exception e) {
+                                    return false;
+                                }
+                            }
+                        });
+
+                        mClusterMatchManager.cluster();
+                    }
+
+                    //mClusterMatchManager.cluster();
+                }
+            });
+        }
+
+    }
+
+    private void clearMatches() {
+
+        if(googleMap != null) {
+            mClusterMatchMarkers.clear();
+            mClusterMatchManager.clearItems();
+            matchLocations.clear();
+            //mClusterMatchManagerRenderer = null;
+
+            Log.d("420 TAG", mClusterMatchMarkers.toString());
+        }
     }
 
     private ArrayList<String> meAndFriends = new ArrayList<>();
@@ -454,6 +1195,10 @@ public class MapFragment extends Fragment {
 
         if(googleMap != null){
 
+            if(mClusterMatchManager != null && mClusterMatchMarkers != null) {
+                clearMatches();
+            }
+
             if(mClusterMatchManager == null){
                 mClusterMatchManager = new ClusterManager<ClusterMatchMarker>(getContext(), googleMap);
 
@@ -537,6 +1282,8 @@ public class MapFragment extends Fragment {
                                 }
                             }
                         });
+
+                        prevMatchLocations = matchLocations;
                     }
                 }
             });
@@ -780,14 +1527,33 @@ public class MapFragment extends Fragment {
         }
 
     }
-
     //endregion
+
     private void setUpFont() {
+
+        btn_FilterAll_Map = view.findViewById(R.id.btn_FilterAll_Map);
+        btn_FilterAvailable_Map = view.findViewById(R.id.btn_FilterAvailable_Map);
+        btn_FilterSingle_Map = view.findViewById(R.id.btn_FilterSingle_Map);
+        btn_FilterTournament_Map = view.findViewById(R.id.btn_FilterTournament_Map);
+        btn_FilterCharityTournament_Map = view.findViewById(R.id.btn_FilterCharityTournament_Map);
+        btn_FilterFriendlyTournament_Map = view.findViewById(R.id.btn_FilterFriendlyTournament_Map);
+
         Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "fonts/bebasneue.ttf");
         TextView txt_Map = (TextView) view.findViewById(R.id.txt_Map);
         txt_Map.setTypeface(typeface);
-    }
 
+        Typeface typeface2 = Typeface.createFromAsset(getContext().getAssets(), "fonts/adventproregular.ttf");
+
+        btn_FilterAll_Map.setTypeface(typeface2);
+        btn_FilterAvailable_Map.setTypeface(typeface2);
+        btn_FilterSingle_Map.setTypeface(typeface2);
+        btn_FilterTournament_Map.setTypeface(typeface2);
+        btn_FilterCharityTournament_Map.setTypeface(typeface2);
+        btn_FilterFriendlyTournament_Map.setTypeface(typeface2);
+
+        searchField_Map = view.findViewById(R.id.searchField_Map);
+        searchField_Map.setTypeface(typeface2);
+    }
 
     private void getUserLocation(UserModel userModel) {
 

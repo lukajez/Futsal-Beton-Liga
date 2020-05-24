@@ -30,7 +30,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
-        <activity android:name=".MatchActivity"></activity>
+        <activity android:name=".UpdateMatchActivity"></activity>
+        <activity android:name=".MatchActivity" />
         <activity android:name=".AddMatchActivity" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.

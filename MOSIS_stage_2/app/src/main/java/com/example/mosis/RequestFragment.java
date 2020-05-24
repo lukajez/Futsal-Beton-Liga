@@ -192,16 +192,11 @@ public class RequestFragment extends Fragment {
                         Toast.makeText(getContext(), "You are friends!", Toast.LENGTH_SHORT).show();
                     }
                 });
-
-
             }
         });
-
     }
 
-    private  void declineRequest() {
-
-    }
+    private  void declineRequest() {}
 
     protected void setUpFont(){
 
@@ -234,8 +229,6 @@ public class RequestFragment extends Fragment {
         txtUsernameRequest.setTypeface(typeface2);
         txtConnectionRQExp.setTypeface(typeface2);
         txtConStatusExp.setTypeface(typeface2);
-
-
         //endregion
     }
     //endregion

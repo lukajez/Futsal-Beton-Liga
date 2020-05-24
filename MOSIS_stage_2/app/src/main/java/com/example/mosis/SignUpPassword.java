@@ -80,7 +80,6 @@ public class SignUpPassword extends AppCompatActivity {
 
                 final String pass = SignUpPass.getText().toString();
 
-
                 if(TextUtils.isEmpty(pass)){
                     Toast.makeText(getApplicationContext(),"Please enter your Password",Toast.LENGTH_LONG).show();
                 }

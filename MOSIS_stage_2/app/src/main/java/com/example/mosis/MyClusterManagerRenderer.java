@@ -77,7 +77,7 @@ public class MyClusterManagerRenderer<GlideDrawable, GlideAnimation> extends Def
 
         Log.d("52. MyClusterRenderer: onBeforeClusterItemRendered", item.getUser().toString());
 
-        imageView.setImageURI(Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_profile%2Fic_default_profile.svg?alt=media&token=e931ec19-7ba0-4522-ad10-c68cfbeb9547"));
+        //imageView.setImageURI(Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_profile%2Fic_default_profile.svg?alt=media&token=e931ec19-7ba0-4522-ad10-c68cfbeb9547"));
         Bitmap icon = iconGenerator.makeIcon();
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(item.getSnippet() + item.getUser().getUsername()).snippet("TEAM: " + item.getUser().getTeam());
     }
@@ -105,7 +105,7 @@ public class MyClusterManagerRenderer<GlideDrawable, GlideAnimation> extends Def
                         }
                     });
         } else {
-            imageView.setImageURI(Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_profile%2Fic_default_profile.svg?alt=media&token=e931ec19-7ba0-4522-ad10-c68cfbeb9547"));
+            imageView.setImageURI(Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_profile%2Fprofile_icon.png?alt=media&token=4065dfe1-c40c-4314-9abb-e4e6c15670f6"));
         }
     }
 

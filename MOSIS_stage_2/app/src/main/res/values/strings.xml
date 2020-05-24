@@ -12,4 +12,13 @@
         <item>Charity Tournament</item>
         <item>Friendly Tournament</item>
     </string-array>
+
+    <string-array name="filterValues">
+        <item>single match</item>
+        <item>tournament</item>
+        <item>charity Tournament</item>
+        <item>friendly Tournament</item>
+        <item>available</item>
+        <item>today</item>
+    </string-array>
 </resources>

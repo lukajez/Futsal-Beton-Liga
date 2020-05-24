@@ -8,9 +8,12 @@ import com.google.firebase.firestore.ServerTimestamp;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 
 public class MatchLocation {
 
+    private String location_name;
+    private String match_type;
     private GeoPoint geoPoint;
     //server timestamp annotation, pass Null => insert timestamp
     private @ServerTimestamp
@@ -58,6 +61,31 @@ public class MatchLocation {
     @NonNull
     @Override
     public String toString() {
-        return "UserLocation{ geoPoint: " + geoPoint + ", timestamp: " + timestamp + ", user: " + match + " }";
+        return "MatchLocation { geoPoint: " + geoPoint + ", timestamp: " + timestamp + ", match: " + match.getName() + " }";
+    }
+
+    public String getLocation_name() {
+        return location_name;
+    }
+
+    public void setLocation_name(String location_name) {
+        this.location_name = location_name;
+    }
+
+    public String getMatch_type() {
+        return match_type;
+    }
+
+    public void setMatch_type(String match_type) {
+        this.match_type = match_type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof MatchLocation)){
+            return false;
+        }
+        MatchLocation other = (MatchLocation) o;
+        return Objects.equals(other.getMatch().getName(), this.getMatch().getName());
     }
 }
