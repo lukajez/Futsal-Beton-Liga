@@ -17,14 +17,13 @@ import java.util.List;
 
 public class CustomAdapter extends RecyclerView.Adapter<ViewHolder> {
 
-    //SearchFragment searchFragment;
     Context context;
     List<User> userList;
 
     public CustomAdapter(Context context, List<User> userList) {
         this.context = context;
         this.userList = userList;
-//        this.context = context;
+
     }
 
     @NonNull

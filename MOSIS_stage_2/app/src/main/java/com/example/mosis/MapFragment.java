@@ -2,6 +2,10 @@ package com.example.mosis;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,11 +17,15 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.nfc.Tag;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
@@ -45,6 +53,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -56,6 +65,8 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 
 import org.jetbrains.annotations.NotNull;
@@ -65,9 +76,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static android.content.Context.NOTIFICATION_SERVICE;
 import static androidx.core.content.ContextCompat.getSystemService;
 
 
@@ -137,7 +150,12 @@ public class MapFragment extends Fragment {
         btn_FilterTournament_Map = view.findViewById(R.id.btn_FilterTournament_Map);
         btn_FilterFriendlyTournament_Map = view.findViewById(R.id.btn_FilterFriendlyTournament_Map);
 
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(Objects.requireNonNull(getContext()));
+
         if (checkLocationPermission()) {
+
+            startUserLocationsRunnable();
+
             mapView = (MapView) view.findViewById(R.id.mapView);
             mapView.onCreate(savedInstanceState);
 
@@ -147,20 +165,20 @@ public class MapFragment extends Fragment {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
             mapView.getMapAsync(new OnMapReadyCallback() {
                 @Override
                 public void onMapReady(GoogleMap mMap) {
                     googleMap = mMap;
 
-                    setCameraView();
+
                     addMapMarkers();
                     addMatchMarkers();
                     startLocationService();
+                    setCameraView();
                 }
             });
         }
-
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(Objects.requireNonNull(getContext()));
 
         btnAddMatchOnMap.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -271,7 +289,7 @@ public class MapFragment extends Fragment {
                     controllFilterAvailable = false;
                     filterTerm = "";
                     filterAtribut = "";
-                    clearSpecFilter("available", "location_status");
+                    clearSpecFilter("available", "match_status");
 
                 } else {
                     btn_FilterAvailable_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpoljeen));
@@ -281,7 +299,7 @@ public class MapFragment extends Fragment {
                     btn_FilterAll_Map.setTextColor(Color.parseColor("#ffffff"));
 
                     filterTerm = "available";
-                    filterAtribut = "location_status";
+                    filterAtribut = "match_status";
                     controllFilterAvailable = true;
 
                     filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
@@ -299,7 +317,7 @@ public class MapFragment extends Fragment {
                     controlFilterSingle = false;
                     filterTerm = "";
                     filterAtribut = "";
-                    clearSpecFilter("Single Match", "location_type");
+                    clearSpecFilter("Single Match", "match_type");
 
                 } else {
                     btn_FilterSingle_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpoljeen));
@@ -309,7 +327,7 @@ public class MapFragment extends Fragment {
                     btn_FilterAll_Map.setTextColor(Color.parseColor("#ffffff"));
 
                     filterTerm = "Single Match";
-                    filterAtribut = "location_type";
+                    filterAtribut = "match_type";
                     controlFilterSingle = true;
 
                     filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
@@ -327,7 +345,7 @@ public class MapFragment extends Fragment {
                     filterTerm = "";
                     filterAtribut = "";
 
-                    clearSpecFilter("Charity Tournament", "location_type");
+                    clearSpecFilter("Charity Tournament", "match_type");
 
                 } else {
                     btn_FilterCharityTournament_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpoljeen));
@@ -337,7 +355,7 @@ public class MapFragment extends Fragment {
                     btn_FilterAll_Map.setTextColor(Color.parseColor("#ffffff"));
 
                     filterTerm = "Charity Tournament";
-                    filterAtribut = "location_type";
+                    filterAtribut = "match_type";
                     controlFilterCharTour = true;
 
                     filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
@@ -355,7 +373,7 @@ public class MapFragment extends Fragment {
                     controlFilterTour = false;
                     filterTerm = "";
                     filterAtribut = "";
-                    clearSpecFilter("Tournament", "location_type");
+                    clearSpecFilter("Tournament", "match_type");
 
                 } else {
                     btn_FilterTournament_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpoljeen));
@@ -365,7 +383,7 @@ public class MapFragment extends Fragment {
                     btn_FilterAll_Map.setTextColor(Color.parseColor("#ffffff"));
 
                     filterTerm = "Tournament";
-                    filterAtribut = "location_type";
+                    filterAtribut = "match_type";
                     controlFilterTour = true;
 
                     filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
@@ -382,7 +400,7 @@ public class MapFragment extends Fragment {
                     controlFilterFrTour = false;
                     filterTerm = "";
                     filterAtribut = "";
-                    clearSpecFilter("Friendly Tournament", "location_type");
+                    clearSpecFilter("Friendly Tournament", "match_type");
 
                 } else {
                     btn_FilterFriendlyTournament_Map.setBackground(ContextCompat.getDrawable(Objects.requireNonNull(getContext()), R.drawable.btnpoljeen));
@@ -392,7 +410,7 @@ public class MapFragment extends Fragment {
                     btn_FilterAll_Map.setTextColor(Color.parseColor("#ffffff"));
 
                     filterTerm = "Friendly Tournament";
-                    filterAtribut = "location_type";
+                    filterAtribut = "match_type";
                     controlFilterFrTour = true;
 
                     filterMatchesAndSearch(searchTerm, filterTerm, filterAtribut);
@@ -400,10 +418,7 @@ public class MapFragment extends Fragment {
             }
         });
 
-        //get My matches
         setAllMatches();
-
-        //get All matches (mine and my friends)
         getMatches();
         setUpFont();
 
@@ -418,10 +433,10 @@ public class MapFragment extends Fragment {
         Log.d("467 TAG", "clearSpecFilter: " + filteredMatchLocations);
 
         if(filteredMatchLocations.size() > 0) {
-            if(filterAtribut.equals("location_type"))
+            if(filterAtribut.equals("match_type"))
                 filteredMatchLocations.removeIf(matchLocation -> matchLocation.getMatch().getType().equals(filterTerm));
 
-            else if(filterAtribut.equals("location_status")) {
+            else if(filterAtribut.equals("match_status")) {
 
                 if(controlFilterTour)
                     helperTerm.add("Tournament");
@@ -605,14 +620,14 @@ public class MapFragment extends Fragment {
                             if (filterTerm.length() > 0) {
                                 //TODO -- it has filter, filter matchLocations by that filter
 
-                                if (atribut.equals("location_type")) {
+                                if (atribut.equals("match_type")) {
 
                                     for(MatchLocation matchLocation : matchLocations) {
                                         if (matchLocation.getMatch().getType().equals(filterTerm))
                                             filteredMatchLocations.add(matchLocation);
                                     }
 
-                                } else if (atribut.equals("location_status")) {
+                                } else if (atribut.equals("match_status")) {
 
                                     if (filteredMatchLocations.size() > 0) {
 
@@ -635,19 +650,33 @@ public class MapFragment extends Fragment {
                         }
 
                         else if (filterTerm.length() > 0) {
+
                             //TODO -- it has filter, filter matchLocations by that filter
 
                             Log.d("341 TAG", "filterTerm: " + filterTerm);
                             Log.d("342 TAG", "atribut: " + atribut);
 
-                            if (atribut.equals("location_type")) {
+                            boolean p = false;
+
+                            if (atribut.equals("match_type")) {
 
                                 for(MatchLocation matchLocation : new ArrayList<MatchLocation>(matchLocations)) {
-                                    if (matchLocation.getMatch().getType().equals(filterTerm))
+
+                                    for(MatchLocation existingMatch : filteredMatchLocations) {
+                                        if (existingMatch.equals(matchLocation)) {
+                                            p = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (matchLocation.getMatch_type().equals(filterTerm) && !p)
+                                    {
                                         filteredMatchLocations.add(matchLocation);
+                                        Log.d("1010101010 TAG", "filterTerm: " + filterTerm + " matchLocation: " + matchLocation);
+                                    }
                                 }
 
-                            } else if (atribut.equals("location_status")) {
+                            } else if (atribut.equals("match_status")) {
 
                                 if (filteredMatchLocations.size() > 0)
                                     filteredMatchLocations.removeIf(matchLocation -> !matchLocation.getMatch().getStatus().equals(filterTerm));
@@ -656,8 +685,8 @@ public class MapFragment extends Fragment {
                             }
                         }
 
-                        if(filteredMatchLocations.size() > 0) {
-                            for(MatchLocation matchLocation: filteredMatchLocations) {
+                        if(filteredMatchLocations.size() > 0  || filterTerm.length() > 0) {
+                            for(MatchLocation matchLocation : filteredMatchLocations) {
 
                                 try{
                                     String snippet = "";
@@ -693,8 +722,8 @@ public class MapFragment extends Fragment {
                                     Log.e("TAG", "addMapMarkers: NullPointerException: " + e.getMessage() );
                                 }
                             }
-                        }
-                        else if(matchLocations.size() > 0) {
+                        } else if(matchLocations.size() > 0) {
+
                             for(MatchLocation matchLocation: matchLocations) {
 
                                 try{
@@ -733,6 +762,7 @@ public class MapFragment extends Fragment {
                             }
                         }
 
+
                         mClusterMatchManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterMatchMarker>() {
                             @Override
                             public boolean onClusterItemClick(ClusterMatchMarker item) {
@@ -764,166 +794,6 @@ public class MapFragment extends Fragment {
         }
 
         //for()
-    }
-
-//    private void filterMatches(ArrayList<String> filterList) {
-//
-//        for(String filterTerm : filterList) {
-//            switch (filterTerm) {
-//                case "All" :
-//                    clearMatches();
-//                    addMatchMarkers();
-//                    break;
-//
-//                case "Single Match" :
-//                    clearMatches();
-//                    filterMatchesByTerm(filterTerm, "location_type");
-//                    break;
-//
-//                case "Tournament" :
-//                    clearMatches();
-//                    filterMatchesByTerm(filterTerm, "type");
-//                    break;
-//
-//                case "Charity Tournament" :
-//                    clearMatches();
-//                    filterMatchesByTerm(filterTerm, "type");
-//                    break;
-//
-//                case "Friendly Tournament" :
-//                    clearMatches();
-//                    filterMatchesByTerm(filterTerm, "type");
-//                    break;
-//
-//                case "available" :
-//                    clearMatches();
-//                    filterMatchesByTerm(filterTerm, "status");
-//                    break;
-//
-//                case "played" :
-//                    clearMatches();
-//                    filterMatchesByTerm(filterTerm, "status");
-//                    break;
-//            }
-//        }
-//    }
-//
-//    private void filterMatchesByTerm(String filterTerm, String atribut) {
-//        if(filterTerm.equals("All")) {
-//
-//        }
-//    }
-
-    private void searchMatchesByTerm(final String searchTerm) {
-
-        if(googleMap != null) {
-
-            clearMatches();
-
-            Log.d("206 TAG", "searchMatchesByTerm: " + mClusterMatchMarkers + " " + mClusterMatchManager);
-
-            if(mClusterMatchManager == null) {
-                mClusterMatchManager = new ClusterManager<ClusterMatchMarker>(getContext(), googleMap);
-            }
-
-            if(mClusterMatchManagerRenderer == null) {
-                mClusterMatchManagerRenderer = new MatchClusterManagerRenderer(
-                        getContext(), googleMap,
-                        mClusterMatchManager
-                );
-                mClusterMatchManager.setRenderer(mClusterMatchManagerRenderer);
-            }
-
-            //userLocations()
-            db = FirebaseFirestore.getInstance();
-
-            db.collection("Match Locations").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                    if(task.isSuccessful()) {
-                        for(DocumentSnapshot documentSnapshot : task.getResult()) {
-
-                            MatchLocation _matchLocation = documentSnapshot.toObject(MatchLocation.class);
-
-                            Log.d("347 TAG", "matchLocation: " + _matchLocation.getMatch().getName());
-
-                            matchLocations.add(_matchLocation);
-
-                        }
-
-                        for(MatchLocation matchLocation: matchLocations) {
-
-                            Log.d("352 TAG", "matchLocation: " + matchLocation.getMatch().getName());
-                            if(matchLocation.getMatch().getName().equals(searchTerm)) {
-
-                                Log.d("354 TAG", "matchLocation: " + matchLocation.getMatch().getName());
-                                try{
-                                    String snippet = "";
-                                    if(matchLocation.getMatch().getCreator().getUser_id().equals(FirebaseAuth.getInstance().getUid())){
-                                        snippet = "This is your match: ";
-                                    }
-                                    else{
-                                        snippet = "This is your friend's match: ";
-                                    }
-
-                                    Uri avatar = Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_match%2Fstreetfut.jpg?alt=media&token=c5c0b31a-21b1-492c-911a-cb5cc4b81e8a"); // set the default avatar
-
-                                    try{
-                                        if(matchLocation.getMatch().getImage_url().length() > 0)
-                                            avatar = Uri.parse(matchLocation.getMatch().getImage_url());
-
-                                    } catch (NumberFormatException e){
-                                        Log.d("TAG", "addMapMarkers: no avatar for " + matchLocation.getMatch().getCreator().getUsername() + ", setting default.");
-                                    }
-
-                                    ClusterMatchMarker newClusterMarker = new ClusterMatchMarker(
-                                            new LatLng(matchLocation.getGeoPoint().getLatitude(), matchLocation.getGeoPoint().getLongitude()),
-                                            matchLocation.getMatch().getName(),
-                                            snippet,
-                                            avatar,
-                                            matchLocation.getMatch()
-                                    );
-
-                                    mClusterMatchManager.addItem(newClusterMarker);
-                                    mClusterMatchMarkers.add(newClusterMarker);
-
-                                } catch (NullPointerException e){
-                                    Log.e("TAG", "addMapMarkers: NullPointerException: " + e.getMessage() );
-                                }
-
-                            }
-                        }
-
-                        mClusterMatchManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterMatchMarker>() {
-                            @Override
-                            public boolean onClusterItemClick(ClusterMatchMarker item) {
-
-                                Log.d("522 TAG", "Item: " + item.getTitle() + " /// " + item.getMatch().toString());
-
-                                try {
-
-                                    Intent intent = new Intent(getContext(), MatchActivity.class);
-                                    intent.putExtra("match_id", item.getMatch().getId());
-
-                                    startActivity(intent);
-                                    getActivity().overridePendingTransition(0,0);
-
-                                    return true;
-
-                                } catch (Exception e) {
-                                    return false;
-                                }
-                            }
-                        });
-
-                        mClusterMatchManager.cluster();
-                    }
-
-                    //mClusterMatchManager.cluster();
-                }
-            });
-        }
-
     }
 
     private void clearMatches() {
@@ -991,7 +861,6 @@ public class MapFragment extends Fragment {
             }
         });
 
-
         Log.d("203. TAG _allMatchModels: ", "_allMatchModels " + _allMatchModels);
     }
 
@@ -1037,10 +906,7 @@ public class MapFragment extends Fragment {
                         }
                     }
                 });
-
-
             }
-
         }
 
         allMatchModels.addAll(myMatchModels);
@@ -1097,7 +963,6 @@ public class MapFragment extends Fragment {
     }
 
     private void retrieveUserLocations(){
-        Log.d("TAG", "retrieveUserLocations: retrieving location of all users in the chatroom.");
 
         try{
             for(final ClusterMarker clusterMarker: mClusterMarkers){
@@ -1107,6 +972,7 @@ public class MapFragment extends Fragment {
                         .document(clusterMarker.getUser().getUser_id());
 
                 userLocationRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @RequiresApi(api = Build.VERSION_CODES.O)
                     @Override
                     public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                         if(task.isSuccessful()){
@@ -1118,10 +984,17 @@ public class MapFragment extends Fragment {
                                 try {
                                     if (mClusterMarkers.get(i).getUser().getUser_id().equals(updatedUserLocation.getUser().getUser_id())) {
 
+                                        Log.d("1121 TAG", "onComplete: udjoh");
+
                                         LatLng updatedLatLng = new LatLng(
                                                 updatedUserLocation.getGeoPoint().getLatitude(),
                                                 updatedUserLocation.getGeoPoint().getLongitude()
                                         );
+
+                                        //ovde ide funkcija za distancu
+                                        calculateDistance(updatedLatLng);
+
+                                        //calculateDistance(updatedLatLng);
 
                                         mClusterMarkers.get(i).setPosition(updatedLatLng);
                                         mClusterManagerRenderer.setUpdateMarker(mClusterMarkers.get(i));
@@ -1178,14 +1051,19 @@ public class MapFragment extends Fragment {
 
                         for(UserLocation userLocation: userLocations) {
 
+                            Log.d("1200 TAG", "onComplete: userLocation: " + userLocation.getUser().getUser_id());
+
                             Log.d("TAG", "addMapMarkers: location: " + userLocation.getGeoPoint().toString());
                             try{
                                 String snippet = "";
                                 if(userLocation.getUser().getUser_id().equals(FirebaseAuth.getInstance().getUid())){
                                     snippet = "This is you: ";
+
+                                    Log.d("1187 TAG", "onComplete: ovo sam ja " + userLocation.getUser().getUser_id());
+
                                 }
                                 else{
-                                    snippet = "This is your friend: ";
+                                    snippet = "This is: ";
                                 }
 
                                 Uri avatar = Uri.parse("https://firebasestorage.googleapis.com/v0/b/mosis-dc29f.appspot.com/o/default_profile%2Fclipart-profile-4.jpg?alt=media&token=386ddecc-8dd1-41f0-be8b-adf66d235525"); // set the default avatar
@@ -1219,17 +1097,17 @@ public class MapFragment extends Fragment {
                                 Log.e("TAG", "addMapMarkers: NullPointerException: " + e.getMessage() );
                             }
                         }
+
                         mClusterManager.cluster();
 
                         setCameraView();
                     }
+
+                    setCameraView();
                 }
             });
-            //userLocations()
 
-            Log.d("159. TAG: ADD MAP MARKERS", "userLocations " + userLocations);
-        } else {
-
+            setCameraView();
         }
     }
 
@@ -1307,8 +1185,6 @@ public class MapFragment extends Fragment {
                             @Override
                             public boolean onClusterItemClick(ClusterMatchMarker item) {
 
-                                Log.d("522 TAG", "Item: " + item.getTitle() + " /// " + item.getMatch().toString());
-
                                 try {
 
                                     Intent intent = new Intent(getContext(), MatchActivity.class);
@@ -1334,6 +1210,7 @@ public class MapFragment extends Fragment {
 
         }
     }
+
     //region FUNCTIONS FOR USER LOCATION, CAMERA...
 
     private void setCameraView() {
@@ -1380,101 +1257,105 @@ public class MapFragment extends Fragment {
         }
     }
 
-    private void getUserData() {
-        if(userLocation == null) {
-            userLocation = new UserLocation();
-
-            DocumentReference userRef = db.collection("users").document(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()));
-
-            userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                    Log.d("TAG", "onComplete: successfully get the user details. ");
-
-                    UserModel user = Objects.requireNonNull(task.getResult()).toObject(UserModel.class);
-                    userLocation.setUser(user);
-                    ((UserAuth)(getActivity().getApplicationContext())).setUser(user);
-                    getLastKnownLocation();
-
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    e.getStackTrace();
-                }
-            });
-        }
-    }
-
-    private void saveUserLocation() {
-
-        db = FirebaseFirestore.getInstance();
-
-        if(userLocation != null){
-            DocumentReference locationRef = db.collection("User Locations").document(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()));
-
-            locationRef.set(userLocation).addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if(task.isSuccessful()) {
-                        Log.d("TAG", "savedUserLocation: \ninsered user location into database." + "\n latitude: " + userLocation.getGeoPoint().getLatitude()+"\n longitude: " + userLocation.getGeoPoint().getLatitude());
-                    }
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    e.getStackTrace();
-                }
-            });
-        }
-    }
-
-    private void getLastKnownLocation() {
-        Log.d("LAST KNOWN LOCATION", "getLastKnownLocation: called.");
-
-        fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
-            @Override
-            public void onComplete(@NonNull Task<Location> task) {
-                if(task.isSuccessful()) {
-                    Location location = task.getResult();
-                    assert location != null;
-                    GeoPoint geoPoint = new GeoPoint(location.getLatitude(), location.getLongitude());
-
-                    Log.d("TAG", "onComplete: latitude: " + geoPoint.getLatitude());
-                    Log.d("TAG", "onComplete: longitude: " + geoPoint.getLongitude());
-
-                    userLocation.setGeoPoint(geoPoint);
-                    userLocation.setTimestamp(null);
-                    saveUserLocation();
-                }
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                e.getStackTrace();
-            }
-        });
-    }
+//    private void getUserData() {
+//        if(userLocation != null) {
+//
+//            Log.d("1497 TAG", "getUserData: " + userLocation);
+//
+//            userLocation = new UserLocation();
+//
+//            DocumentReference userRef = db.collection("users").document(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()));
+//
+//            userRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+//                @Override
+//                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+//                    Log.d("TAG", "onComplete: successfully get the user details. ");
+//
+//                    UserModel user = Objects.requireNonNull(task.getResult()).toObject(UserModel.class);
+//                    userLocation.setUser(user);
+//                    ((UserAuth)(getActivity().getApplicationContext())).setUser(user);
+//                    getLastKnownLocation();
+//
+//                }
+//            }).addOnFailureListener(new OnFailureListener() {
+//                @Override
+//                public void onFailure(@NonNull Exception e) {
+//                    e.getStackTrace();
+//                }
+//            });
+//        }
+//    }
+//
+//    private void saveUserLocation() {
+//
+//        db = FirebaseFirestore.getInstance();
+//
+//        if(userLocation != null){
+//            DocumentReference locationRef = db.collection("User Locations").document(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()));
+//
+//            locationRef.set(userLocation).addOnCompleteListener(new OnCompleteListener<Void>() {
+//                @Override
+//                public void onComplete(@NonNull Task<Void> task) {
+//                    if(task.isSuccessful()) {
+//                        Log.d("TAG", "savedUserLocation: \ninsered user location into database." + "\n latitude: " + userLocation.getGeoPoint().getLatitude()+"\n longitude: " + userLocation.getGeoPoint().getLatitude());
+//                    }
+//                }
+//            }).addOnFailureListener(new OnFailureListener() {
+//                @Override
+//                public void onFailure(@NonNull Exception e) {
+//                    e.getStackTrace();
+//                }
+//            });
+//        }
+//    }
+//
+//    private void getLastKnownLocation() {
+//        Log.d("LAST KNOWN LOCATION", "getLastKnownLocation: called.");
+//
+//        fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
+//            @Override
+//            public void onComplete(@NonNull Task<Location> task) {
+//                if(task.isSuccessful()) {
+//                    Location location = task.getResult();
+//
+//                    Log.d("1463 TAG", "onComplete: location " + location);
+//
+//
+//
+//                    if(location != null) {
+//                        GeoPoint geoPoint = new GeoPoint(location.getLatitude(), location.getLongitude());
+//                        Log.d("TAG", "onComplete: latitude: " + geoPoint.getLatitude());
+//                        Log.d("TAG", "onComplete: longitude: " + geoPoint.getLongitude());
+//
+//                        userLocation.setGeoPoint(geoPoint);
+//                        userLocation.setTimestamp(null);
+//                        saveUserLocation();
+//                    }
+//                    }
+//            }
+//        }).addOnFailureListener(new OnFailureListener() {
+//            @Override
+//            public void onFailure(@NonNull Exception e) {
+//                e.getStackTrace();
+//            }
+//        });
+//    }
 
     private boolean checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(Objects.requireNonNull(getContext()),
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
 
-            // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(Objects.requireNonNull(getActivity()),
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
 
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
                 new AlertDialog.Builder(getActivity())
                         .setTitle("DO YOU WANT TO ADD THIS PERMISSION")
                         .setMessage("DO YOU WANT TO ADD THIS PERMISSION")
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                //Prompt the user once explanation has been shown
+
                                 ActivityCompat.requestPermissions(Objects.requireNonNull(getActivity()),
                                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                                         MY_PERMISSIONS_REQUEST_LOCATION);
@@ -1482,10 +1363,8 @@ public class MapFragment extends Fragment {
                         })
                         .create()
                         .show();
-
-
             } else {
-                // No explanation needed, we can request the permission.
+
                 ActivityCompat.requestPermissions(getActivity(),
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         MY_PERMISSIONS_REQUEST_LOCATION);
@@ -1514,7 +1393,6 @@ public class MapFragment extends Fragment {
 
         }
     }
-
     //endregion
 
     //region STATES
@@ -1528,7 +1406,9 @@ public class MapFragment extends Fragment {
 
             if(checkLocationPermission()) {
                 mapView.onResume();
-                getUserData();
+                //getUserData();
+                //showData();
+                setCameraView();
                 startUserLocationsRunnable();
             }
         }
@@ -1597,50 +1477,79 @@ public class MapFragment extends Fragment {
         searchField_Map.setTypeface(typeface2);
     }
 
-    private void getUserLocation(UserModel userModel) {
+    ArrayList<MatchLocation> notifiedMatches = new ArrayList<>();
 
-        DocumentReference locationRef = db.collection("User Locations").document(userModel.getUser_id());
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void calculateDistance(LatLng userLatLng) {
 
-        locationRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if(task.isSuccessful()) {
-                    if(task.getResult().toObject(UserLocation.class) != null) {
-                        userLocations.add(task.getResult().toObject(UserLocation.class));
-                        Log.d("TAG USER LOCATIONS getUserLocation:", task.getResult().toObject(UserLocation.class).toString());
-                    }
-                }
-            }
-        });
+        Location l1 = new Location("myLoc");
+        l1.setLatitude(userLatLng.latitude);
+        l1.setLongitude(userLatLng.longitude);
+
+        Location l2 = new Location("secLoc");
+
+        for(MatchLocation matchLocation : matchLocations) {
+
+            l2.setLatitude(matchLocation.getGeoPoint().getLatitude());
+            l2.setLongitude(matchLocation.getGeoPoint().getLongitude());
+
+            float distance = l1.distanceTo(l2);
+
+            if (distance < 1000.0f) {
+                Log.d("1469 TAG", "calculateDistance: " + distance);
+                checkAndNotify(matchLocation);
+
+            } else notifiedMatches.remove(matchLocation);
+
+        }
     }
 
-    private void showData() {
-        db = FirebaseFirestore.getInstance();
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void checkAndNotify(MatchLocation matchLocation) {
 
-        db.collection("users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if(task.isSuccessful()) {
-
-                    for(DocumentSnapshot documentSnapshot : task.getResult()) {
-
-                        //Log.d("TAG", documentSnapshot.get("username").toString() + " " + documentSnapshot.get("team").toString());
-                        UserModel user = documentSnapshot.toObject(UserModel.class);
-                        Log.d("TAG SHOW DATA", user.toString());
-                        //getUserLocation(user);
-                        userList.add(user);
-                    }
-                }
-            }
-        });
-    }
-
-    private void setUsersOnMap() {
-
-        //get all existing users
-
-
+        show_Notification(matchLocation.getLocation_name());
 
     }
 
+//    private void sendNotification(String name)
+//    {
+//        NotificationCompat.Builder builder= new NotificationCompat.Builder(getContext(), "channel")
+//                .setContentTitle(name)
+//                .setSmallIcon(R.drawable.ic_icon)
+//                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+//
+//        NotificationManager manager = (NotificationManager) getContext().getSystemService(getContext().NOTIFICATION_SERVICE);
+//
+//        Intent intent = new Intent(getContext(), MapFragment.class);
+//        PendingIntent contentIntent = PendingIntent.getActivity(getContext(),0,intent,PendingIntent.FLAG_IMMUTABLE);
+//        builder.setContentIntent(contentIntent);
+//
+//        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getContext());
+//
+//        notificationManager.notify(new Random().nextInt(), builder.build());
+//    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void show_Notification(String locName){
+
+
+        int notifyID = 1;
+        String CHANNEL_ID = "my_channel_01";// The id of the channel.
+        CharSequence name = "channel_Name";// The user-visible name of the channel.
+        int importance = NotificationManager.IMPORTANCE_HIGH;
+        NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, importance);
+
+        Notification notification =
+                new NotificationCompat.Builder(getContext(), "channelId")
+                        .setSmallIcon(R.drawable.ic_icon)
+                        .setContentTitle("Near the " + locName)
+                        .setContentText("Hello!")
+                        .setChannelId(CHANNEL_ID).build();
+
+        NotificationManager mNotificationManager =
+                (NotificationManager) getContext().getSystemService(getContext().NOTIFICATION_SERVICE);
+        mNotificationManager.createNotificationChannel(mChannel);
+
+        mNotificationManager.notify(notifyID , notification);
+    }
 }

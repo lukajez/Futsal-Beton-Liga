@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,6 +21,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -30,6 +33,7 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -38,6 +42,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -55,6 +60,11 @@ public class SignUpPhoto extends AppCompatActivity {
     TextView loginL, registerL;
     FirebaseFirestore fStore = FirebaseFirestore.getInstance();
     DocumentReference docRef;
+    private UserLocation userLocation;
+    UserModel meModel;
+    FirebaseFirestore db;
+
+    private FusedLocationProviderClient fusedLocationProviderClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +72,9 @@ public class SignUpPhoto extends AppCompatActivity {
         setContentView(R.layout.activity_sign_up_photo);
 
         //getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        db = FirebaseFirestore.getInstance();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
@@ -111,22 +124,16 @@ public class SignUpPhoto extends AppCompatActivity {
                 DocumentReference documentReference = fStore.collection("users").document(userID);
                 ArrayList<String> friends = new ArrayList<>();
                 ArrayList<MatchModel> matches = new ArrayList<>();
+                ArrayList<MatchModel> subscriptions = new ArrayList<>();
 
-                Map<String, Object> user = new HashMap<>();
-                user.put("user_id", userID);
-                user.put("email", email);
-                user.put("username", username);
-                user.put("points", 0);
-                user.put("team", team);
+                if(pickedImageUri != null) {
+                    meModel = new UserModel(userID, email, username, 0, team, friends, matches, subscriptions, pickedImageUri.toString());
+                }
+                else {
+                    meModel = new UserModel(userID, email, username, 0, team, friends, matches, subscriptions, "");
+                }
 
-                if(pickedImageUri != null)
-                    user.put("image_url", pickedImageUri.toString());
-                else user.put("image_url", "");
-
-                user.put("friends", friends);
-                user.put("matches", matches);
-
-                documentReference.set(user).addOnSuccessListener(new OnSuccessListener<Void>() {
+                documentReference.set(meModel).addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
                         Log.d("TAG", "onSuccess: user Profile is created for " + userID);
@@ -138,9 +145,7 @@ public class SignUpPhoto extends AppCompatActivity {
                     }
                 });
 
-//                    Intent intent = new Intent(SignUpTeam.this, SignUpPhoto.class);
-//                    startActivity(intent);
-//                    overridePendingTransition(0, 0);
+                getUserData(meModel);
                 goToActivity();
             }
         });
@@ -254,6 +259,77 @@ public class SignUpPhoto extends AppCompatActivity {
         registerL.setTypeface(typeface);
         txt_hint.setTypeface(typeface);
         //endregion
+    }
+
+    private void getUserData(UserModel userModel) {
+
+        Log.d("270 TAG", "getUserData: " + userModel);
+
+        if(userLocation == null) {
+
+            userLocation = new UserLocation();
+            userLocation.setUser(userModel);
+            getLastKnownLocation();
+        }
+    }
+
+    private void getLastKnownLocation() {
+        Log.d("281 LAST KNOWN LOCATION", "getLastKnownLocation: called.");
+
+        fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
+            @Override
+            public void onComplete(@NonNull Task<Location> task) {
+                if(task.isSuccessful()) {
+                    Location location = task.getResult();
+
+                    Log.d("1463 TAG", "onComplete: location " + location);
+
+
+
+                    if(location != null) {
+                        GeoPoint geoPoint = new GeoPoint(location.getLatitude(), location.getLongitude());
+                        Log.d("TAG", "onComplete: latitude: " + geoPoint.getLatitude());
+                        Log.d("TAG", "onComplete: longitude: " + geoPoint.getLongitude());
+
+                        userLocation.setGeoPoint(geoPoint);
+                        userLocation.setTimestamp(null);
+
+                        Log.d("301 TAG", "onComplete: userLocation" + userLocation);
+                        saveUserLocation();
+                    }
+                }
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                e.getStackTrace();
+            }
+        });
+    }
+
+    private void saveUserLocation() {
+
+        Log.d("314 TAG", "saveUserLocation: " + "telo funkcije " + userLocation);
+
+        db = FirebaseFirestore.getInstance();
+
+        if(userLocation != null){
+            DocumentReference locationRef = db.collection("User Locations").document(Objects.requireNonNull(FirebaseAuth.getInstance().getUid()));
+
+            locationRef.set(userLocation).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if(task.isSuccessful()) {
+                        Log.d("TAG", "savedUserLocation: \ninsered user location into database." + "\n latitude: " + userLocation.getGeoPoint().getLatitude()+"\n longitude: " + userLocation.getGeoPoint().getLatitude());
+                    }
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    e.getStackTrace();
+                }
+            });
+        }
     }
 
 }

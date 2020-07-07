@@ -15,6 +15,7 @@ public class MatchLocation {
     private String location_name;
     private String match_type;
     private GeoPoint geoPoint;
+    private String match_status;
     //server timestamp annotation, pass Null => insert timestamp
     private @ServerTimestamp
     Date timestamp;
@@ -78,6 +79,14 @@ public class MatchLocation {
 
     public void setMatch_type(String match_type) {
         this.match_type = match_type;
+    }
+
+    public String getMatch_status() {
+        return match_status;
+    }
+
+    public void setMatch_status(String match_status) {
+        this.match_status = match_status;
     }
 
     @Override

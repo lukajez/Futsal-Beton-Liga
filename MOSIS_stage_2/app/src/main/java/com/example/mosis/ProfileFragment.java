@@ -52,10 +52,14 @@ public class ProfileFragment extends Fragment {
     private Uri pickedImage;
 
     private RecyclerView recycler_friends_profile;
+    private RecyclerView recycler_matches_profile;
 
+    private CustomMatchAdapter matchAdapter;
     private CustomAdapter adapter;
     private ArrayList<String> friends;
     private ArrayList<User> friendsList;
+    private ArrayList<MatchModel> matchesList = new ArrayList<>();
+    private ArrayList<MatchModel> mySubscriptions = new ArrayList<>();
 
     public ProfileFragment() {}
 
@@ -70,6 +74,11 @@ public class ProfileFragment extends Fragment {
         recycler_friends_profile.setHasFixedSize(true);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext());
         recycler_friends_profile.setLayoutManager(layoutManager);
+
+        recycler_matches_profile = view.findViewById(R.id.recycler_matches_profile);
+        recycler_matches_profile.setHasFixedSize(true);
+        RecyclerView.LayoutManager layMan = new LinearLayoutManager(getContext());
+        recycler_matches_profile.setLayoutManager(layMan);
 
         friends = new ArrayList<>();
         friendsList = new ArrayList<>();
@@ -104,9 +113,46 @@ public class ProfileFragment extends Fragment {
         });
 
         this.getMyFriends();
+        this.getMySubscriptions();
         this.setUpInfo();
         this.setUpFont();
         return view;
+    }
+
+    UserModel myUser;
+
+    private void getMySubscriptions() {
+
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+
+        firestore.collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+
+                myUser = documentSnapshot.toObject(UserModel.class);
+
+                Log.d("132 TAG", "onComplete: " + myUser.getSubscriptions());
+
+                matchAdapter = new CustomMatchAdapter(getContext(), myUser.getSubscriptions());
+                recycler_matches_profile.setAdapter(matchAdapter);
+            }
+        });
+
+//        firestore.collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+//            @Override
+//            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+//                if (task.isSuccessful()){
+//
+//                    myUser = task.getResult().toObject(UserModel.class);
+//                    Log.d("132 TAG", "onComplete: " + myUser.getSubscriptions());
+//
+//                    matchesList.addAll(myUser.getSubscriptions());
+//                }
+//
+//                matchAdapter = new CustomMatchAdapter(getContext(), myUser.getSubscriptions());
+//                recycler_matches_profile.setAdapter(matchAdapter);
+//            }
+//        });
     }
 
     private void getMyFriends() {
@@ -154,26 +200,13 @@ public class ProfileFragment extends Fragment {
                     }
                 }
             });
-
-//            db.collection("users").document(fr).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-//                @Override
-//                public void onSuccess(DocumentSnapshot documentSnapshot) {
-//
-//                    User users = new User((String) documentSnapshot.get("username").toString(), (String) documentSnapshot.get("team").toString(), (String) documentSnapshot.get("points").toString(), (String) documentSnapshot.get("image_url"));
-//                    friendsList.add(users);
-//                }
-//            }).addOnFailureListener(new OnFailureListener() {
-//                @Override
-//                public void onFailure(@NonNull Exception e) {
-//
-//                }
-//            });
         }
 
         Log.d("FRIENDS LIST", "THESE ARE YOUR FRIENDS: " + friendsList);
     }
 
     private void setUpInfo() {
+
         txtUsername = view.findViewById(R.id.txt_profile_username);
         txtTeam =  view.findViewById(R.id.txt_profile_team);
         imageView = view.findViewById(R.id.img_profile_icon);
@@ -204,12 +237,6 @@ public class ProfileFragment extends Fragment {
                         }
                     }
                 });
-
-
-
-//        final StorageReference reference = FirebaseStorage.getInstance().getReference().child("profileImages").child(uid + ".jpeg");
-//        imageView = (ImageView) view.findViewById(R.id.img_profile_icon);
-
     }
 
     private void setUserProfileUrl(Uri uri, ImageView img) {

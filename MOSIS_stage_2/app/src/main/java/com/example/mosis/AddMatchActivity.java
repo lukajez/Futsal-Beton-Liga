@@ -320,6 +320,7 @@ public class AddMatchActivity extends AppCompatActivity implements AdapterView.O
                     matchLocation.setMatch(matchModel);
                     matchLocation.setLocation_name(matchModel.getName());
                     matchLocation.setMatch_type(matchModel.getType());
+                    matchLocation.setMatch_status(matchModel.getStatus());
 
                     saveMatchLocation();
                 }
