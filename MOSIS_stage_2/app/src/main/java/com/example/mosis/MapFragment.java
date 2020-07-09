@@ -469,7 +469,7 @@ public class MapFragment extends Fragment {
                     for(String term : helperTerm) {
 
                         Log.d("454 TAG", "term: " + term);
-                        prevMatchLocations.removeIf(matchLocation -> !matchLocation.getMatch().getType().equals(term));
+                        prevMatchLocations.removeIf(matchLocation -> !matchLocation.getMatch_type().equals(term));
 
                         helperMatchLocations.addAll(prevMatchLocations);
                         prevMatchLocations.clear();
@@ -531,7 +531,8 @@ public class MapFragment extends Fragment {
                     Log.e("TAG", "addMapMarkers: NullPointerException: " + e.getMessage() );
                 }
             }
-        } else {
+        }
+        else {
             if(searchTerm.length() > 0) {
                 filterMatchesAndSearch(searchTerm, "", "");
             } else addMatchMarkers();
@@ -632,14 +633,14 @@ public class MapFragment extends Fragment {
                                     if (filteredMatchLocations.size() > 0) {
 
                                         prevMatchLocations = filteredMatchLocations;
-                                        filteredMatchLocations.removeIf(mLoc -> !mLoc.getMatch().getStatus().equals(filterTerm));
+                                        filteredMatchLocations.removeIf(mLoc -> !mLoc.getMatch_status().equals(filterTerm));
                                     }
                                     else {
 
                                         prevMatchLocations.clear();
                                         //prevMatchLocations.addAll(matchLocations);
 
-                                        matchLocations.removeIf(matchLocation -> !matchLocation.getMatch().getStatus().equals(filterTerm));
+                                        matchLocations.removeIf(matchLocation -> !matchLocation.getMatch_status().equals(filterTerm));
                                         filteredMatchLocations.addAll(matchLocations);
 
                                         matchLocations.clear();
@@ -679,9 +680,23 @@ public class MapFragment extends Fragment {
                             } else if (atribut.equals("match_status")) {
 
                                 if (filteredMatchLocations.size() > 0)
-                                    filteredMatchLocations.removeIf(matchLocation -> !matchLocation.getMatch().getStatus().equals(filterTerm));
+                                    filteredMatchLocations.removeIf(matchLocation -> !matchLocation.getMatch_status().equals(filterTerm));
 
-                                else matchLocations.removeIf(matchLocation -> !matchLocation.getMatch().getStatus().equals(filterTerm));
+                                else {
+
+                                    //matchLocations.removeIf(matchLocation -> !matchLocation.getMatch_status().equals(filterTerm));
+                                    for(MatchLocation matchLocation : matchLocations) {
+
+                                        if(matchLocation.getMatch_status().equals(filterTerm)) {
+                                            filteredMatchLocations.add(matchLocation);
+                                            Log.d("692 TAG", "onComplete: " + matchLocation);
+                                        }
+                                    }
+                                }
+
+
+                                Log.d("687 TAG", "onComplete: " + filteredMatchLocations);
+                                Log.d("687 TAG", "onComplete: " + matchLocations);
                             }
                         }
 
@@ -900,7 +915,7 @@ public class MapFragment extends Fragment {
 
                             UserModel userModel = task.getResult().toObject(UserModel.class);
 
-                            allMatchModels.addAll(userModel.getMatches());
+                            //allMatchModels.addAll(userModel.getMatches());
 
                             Log.d("168: TAG", "allMatchModels: " + allMatchModels);
                         }
@@ -909,7 +924,7 @@ public class MapFragment extends Fragment {
             }
         }
 
-        allMatchModels.addAll(myMatchModels);
+        //allMatchModels.addAll(myMatchModels);
         Log.d("168: TAG", "allMatchModels: " + allMatchModels);
     }
 
